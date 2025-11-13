@@ -443,4 +443,123 @@ document.addEventListener('click', async (e) => {
     pending = { card: null, index: -1 };
   });
 })();
+/* ===== モザイク用のクラス付与（viewer.js 末尾に貼るだけ） ===== */
+(function applyMosaicGrid() {
+  // 各カードを走査
+  function setupCard(card) {
+    if (!card) return;
+    // 画像の入っているコンテナを特定
+    let box =
+      card.querySelector('.images-grid') ||
+      card.querySelector('.lineup-images') ||
+      card.querySelector('.images') ||
+      card.querySelector('.card-images') ||
+      card.querySelector('.card-body') ||
+      card;
+
+    // 親に images-grid クラスを付ける
+    if (!box.classList.contains('images-grid')) {
+      box.classList.add('images-grid');
+    }
+
+    // 画像を拾って1〜5にクラス振り
+    const imgs = Array.from(
+      box.querySelectorAll('img')
+    ).filter(Boolean).slice(0, 5);
+
+    imgs.forEach((img, i) => {
+      // 既存の img-? は外す
+      for (let k = 1; k <= 5; k++) img.classList.remove('img-' + k);
+      img.classList.add('img-' + (i + 1));
+      // 無画像の時に崩れないように
+      if (!img.src || img.src === 'about:blank') {
+        img.classList.add('hidden');
+      } else {
+        img.classList.remove('hidden');
+      }
+    });
+  }
+
+  // 初期適用
+  document.querySelectorAll('.lineup-card,[data-lineup-card]').forEach(setupCard);
+
+  // 以降に追加されるカードにも適用
+  const mo = new MutationObserver((muts) => {
+    muts.forEach(m => {
+      m.addedNodes.forEach(n => {
+        if (n.nodeType !== 1) return;
+        if (n.matches?.('.lineup-card,[data-lineup-card]')) setupCard(n);
+        n.querySelectorAll?.('.lineup-card,[data-lineup-card]').forEach(setupCard);
+      });
+    });
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+})();
+/* ===== 画像親を自動検出→グリッド化＋順番強制 ===== */
+(function forceMosaicAndOrder() {
+  // 並び順: 1,5,3,2,4 にしたい場合（0-based）
+  const ORDER = [0,4,2,1,3];
+
+  // カード(1件分)に適用
+  function applyToCard(card){
+    if (!card) return;
+
+    // カード内の画像候補を拾う（ヘッダー/ボタン系は除外）
+    let imgs = Array.from(card.querySelectorAll('img')).filter(img => {
+      if (img.closest('header, nav, button, .badge, .tag, .avatar')) return false;
+      return true;
+    });
+
+    if (imgs.length === 0) return;
+
+    // 1〜5枚だけ使う
+    imgs = imgs.slice(0, 5);
+
+    // 5枚未満でもある分だけでOK
+    // 画像たちの共通親を見つける
+    let box = imgs[0].parentElement;
+    const containsAll = (el) => imgs.every(i => el.contains(i));
+    while (box && !containsAll(box)) box = box.parentElement;
+    // さらにひとつ外側がカード外でなければ、外側が良ければ採用
+    if (box && box.parentElement && box.parentElement !== card && containsAll(box.parentElement)) {
+      box = box.parentElement;
+    }
+    if (!box) return;
+
+    // 親にグリッドクラス
+    box.classList.add('mosaic-grid');
+
+    // 並び替え：ORDERに従ってノード自体を付け替える
+    const ordered = ORDER.map(i => imgs[i]).filter(Boolean);
+
+    // 既存順が良ければここを imgs にする
+    const finalList = ordered.length ? ordered : imgs;
+
+    // 一旦既存の5枚だけを末尾に append（DOM順を決定）
+    finalList.forEach((img, idx) => {
+      // img-? クラスを付け直し
+      for (let k=1;k<=5;k++) img.classList.remove('img-'+k);
+      img.classList.add('img-'+(idx+1));
+      // 空画像対策
+      if (!img.src || img.src === 'about:blank') img.classList.add('hidden');
+      else img.classList.remove('hidden');
+      box.appendChild(img);
+    });
+  }
+
+  // 初期適用
+  document.querySelectorAll('.lineup-card,[data-lineup-card]').forEach(applyToCard);
+
+  // 追加/更新に追随
+  const mo = new MutationObserver(muts=>{
+    muts.forEach(m=>{
+      m.addedNodes.forEach(n=>{
+        if (n.nodeType!==1) return;
+        if (n.matches?.('.lineup-card,[data-lineup-card]')) applyToCard(n);
+        n.querySelectorAll?.('.lineup-card,[data-lineup-card]').forEach(applyToCard);
+      });
+    });
+  });
+  mo.observe(document.body,{childList:true,subtree:true});
+})();
 
