@@ -562,4 +562,72 @@ document.addEventListener('click', async (e) => {
   });
   mo.observe(document.body,{childList:true,subtree:true});
 })();
+/* ===== 画像を .cell でラップしてグリッドに強制配置 ===== */
+(function forceMosaicGridStrict(){
+  // 並び順：画像1,5,3,2,4 にしたいなら 0-based で指定
+  const ORDER = [0,4,2,1,3];
+
+  function applyToCard(card){
+    if (!card) return;
+
+    // カード内の候補画像（ヘッダー/アイコン等は除外）
+    let imgs = Array.from(card.querySelectorAll('img')).filter(img=>{
+      if (img.closest('header, nav, button, .badge, .tag, .avatar')) return false;
+      return true;
+    });
+
+    if (!imgs.length) return;
+
+    // 1〜5枚に限定
+    imgs = imgs.slice(0,5);
+
+    // 共通親（画像群の一番近い共通の親）を探す
+    let box = imgs[0].parentElement;
+    const containsAll = el => imgs.every(i=>el.contains(i));
+    while (box && !containsAll(box)) box = box.parentElement;
+    if (!box) return;
+
+    // グリッド化
+    box.classList.add('mosaic-grid');
+
+    // 並び順を確定（ORDERが足りない/画像が少ない場合も安全）
+    const ordered = ORDER.map(i=>imgs[i]).filter(Boolean);
+    const list = ordered.length ? ordered : imgs;
+
+    // ラップして .cell を作り、クラス img-1..img-5 を振って append
+    list.forEach((img, idx) => {
+      let cell = img.closest('.cell');
+      if (!cell || cell.parentElement !== box){
+        cell = document.createElement('div');
+        cell.className = 'cell';
+        img.replaceWith(cell);
+        cell.appendChild(img);
+      }
+      for (let k=1;k<=5;k++) cell.classList.remove('img-'+k);
+      cell.classList.add('img-'+(idx+1));
+
+      // 画像が空なら非表示
+      const empty = !img.src || img.src === 'about:blank';
+      cell.classList.toggle('hidden', empty);
+
+      box.appendChild(cell); // DOM順を確定
+    });
+  }
+
+  // 初期
+  document.querySelectorAll('.lineup-card,[data-lineup-card]').forEach(applyToCard);
+
+  // 変化に追随
+  const mo = new MutationObserver(muts=>{
+    muts.forEach(m=>{
+      m.addedNodes.forEach(n=>{
+        if (n.nodeType!==1) return;
+        if (n.matches?.('.lineup-card,[data-lineup-card]')) applyToCard(n);
+        n.querySelectorAll?.('.lineup-card,[data-lineup-card]').forEach(applyToCard);
+      });
+    });
+  });
+  mo.observe(document.body,{childList:true,subtree:true});
+})();
+
 
