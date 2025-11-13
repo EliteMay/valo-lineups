@@ -1,95 +1,159 @@
-/* ===== 画像を .cell でラップしてグリッド＋サイズ強制 ===== */
-(function () {
-  // 並び順: 1,5,3,2,4（0-basedで 0,4,2,1,3）
-  const ORDER = [0,4,2,1,3];
+/* ===== viewer ===== */
+const ORDER = [0, 4, 2, 1, 3]; // 1,5,3,2,4 の表示順
 
-  // 1枚のカードに適用
-  function apply(card) {
-    if (!card) return;
+const listEl  = byId('list');
+const mapSel  = byId('f-map');
+const agentSel= byId('f-agent');
 
-    // カード内の画像候補（ボタン/アイコン系は除外）
-    let imgs = Array.from(card.querySelectorAll('img')).filter(img => {
-      if (img.closest('header, nav, button, .badge, .tag, .avatar')) return false;
-      // 小さすぎるアイコンも除外
-      const r = img.getBoundingClientRect();
-      return (r.width >= 80 || r.height >= 80);
-    });
-    if (!imgs.length) return;
+fillSelectOptions(mapSel, MAPS);
+fillSelectOptions(agentSel, AGENTS);
 
-    imgs = imgs.slice(0,5); // 最大5枚まで
+byId('f-clear').onclick = () => {
+  qsa('#filters select,#filters input').forEach(el => el.value = '');
+  render();
+};
 
-    // 画像たちの共通親を探す
-    let box = imgs[0].parentElement;
-    const containsAll = el => imgs.every(i => el.contains(i));
-    while (box && !containsAll(box)) box = box.parentElement;
-    if (!box) return;
+['f-map','f-agent','f-side','f-site','f-throw','f-q'].forEach(id=>{
+  byId(id).addEventListener('input', render);
+});
 
-    // すでにグリッド済みならスキップ
-    if (!box.classList.contains('mosaic-grid')) {
-      box.classList.add('mosaic-grid');
+byId('export').onclick = () => {
+  const blob = new Blob([ localStorage.getItem(STORAGE_KEY) || '[]' ], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'valo-lineups.json';
+  a.click();
+};
+byId('import').onchange = async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const text = await file.text();
+  try{
+    const arr = JSON.parse(text);
+    if(!Array.isArray(arr)) throw 0;
+    writeAll(arr);
+    alert('インポート完了');
+    render();
+  }catch{
+    alert('JSONが不正です');
+  }
+};
+byId('wipe').onclick = ()=>{
+  if(!promptPass()) return;
+  if(confirm('全ての定点を削除しますか？')){
+    writeAll([]);
+    render();
+  }
+};
+
+function filterList(all){
+  const m   = mapSel.value.trim().toLowerCase();
+  const a   = agentSel.value.trim().toLowerCase();
+  const s   = byId('f-side').value.trim().toLowerCase();
+  const site= byId('f-site').value.trim().toLowerCase();
+  const th  = byId('f-throw').value.trim().toLowerCase();
+  const q   = byId('f-q').value.trim().toLowerCase();
+
+  return all.filter(it=>{
+    const text = [
+      it.map,it.agent,it.side,it.site,it.pos,it.throw,(it.tags||[]).join(' '),it.note
+    ].join(' ').toLowerCase();
+
+    if (m    && (it.map||'').toLowerCase()  !== m) return false;
+    if (a    && (it.agent||'').toLowerCase()!== a) return false;
+    if (s    && (it.side||'').toLowerCase() !== s) return false;
+    if (site && (it.site||'').toLowerCase() !== site) return false;
+    if (th   && (it.throw||'').toLowerCase().indexOf(th)===-1) return false;
+    if (q    && text.indexOf(q)===-1) return false;
+    return true;
+  });
+}
+
+function render(){
+  const all = readAll();
+  const arr = filterList(all);
+
+  listEl.innerHTML = '';
+  if(!arr.length){
+    listEl.innerHTML = `<div class="panel"><p class="muted">登録済みの定点がありません。</p></div>`;
+    return;
+  }
+
+  arr.forEach(it=>{
+    const card = document.createElement('article');
+    card.className = 'card';
+
+    const head = document.createElement('div');
+    head.className = 'card-head';
+    head.innerHTML = `
+      <div class="chips">
+        ${it.map?`<span class="chip">${it.map}</span>`:''}
+        ${it.agent?`<span class="chip">${it.agent}</span>`:''}
+        ${it.side?`<span class="chip">${it.side}</span>`:''}
+        ${it.site?`<span class="chip">${it.site}</span>`:''}
+        ${(it.tags||[]).map(t=>`<span class="chip">#${t}</span>`).join('')}
+      </div>
+      <h3 class="title">${(it.pos||'（無題）')}</h3>
+      <div class="sub">${it.throw||''}</div>
+    `;
+    card.appendChild(head);
+
+    // 画像表示順: 1,5,3,2,4
+    const imgs = [it.img1, it.img5, it.img3, it.img2, it.img4].filter(Boolean);
+    if(imgs.length){
+      const box = document.createElement('div');
+      box.className = 'mosaic-grid';
+      imgs.forEach((src, idx)=>{
+        const cell = document.createElement('div');
+        cell.className = 'cell img-' + (idx+1);
+        const img = document.createElement('img');
+        img.src = src; img.alt='';
+        img.onclick = () => openLightbox(src);
+        cell.appendChild(img);
+        box.appendChild(cell);
+      });
+      card.appendChild(box);
+    }
+    if(it.note){
+      const p = document.createElement('div');
+      p.className = 'card-head';
+      p.innerHTML = `<div class="muted">${it.note}</div>`;
+      card.appendChild(p);
     }
 
-    // 並び順を決める
-    const ordered = ORDER.map(i => imgs[i]).filter(Boolean);
-    const list = ordered.length ? ordered : imgs;
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn';
+    editBtn.textContent = '編集';
+    editBtn.onclick = () => {
+      if(!promptPass()) return;
+      location.href = `input.html?id=${encodeURIComponent(it.id)}`;
+    };
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger';
+    delBtn.textContent = '削除';
+    delBtn.onclick = () => {
+      if(!promptPass()) return;
+      if(!confirm('この定点を削除しますか？')) return;
+      const rest = readAll().filter(x => x.id !== it.id);
+      writeAll(rest);
+      render();
+    };
+    actions.append(editBtn, delBtn);
+    card.appendChild(actions);
 
-    // .cell でラップして配置
-    list.forEach((img, idx) => {
-      let cell = img.closest('.cell');
-      if (!cell || cell.parentElement !== box) {
-        cell = document.createElement('div');
-        cell.className = 'cell';
-        img.replaceWith(cell);
-        cell.appendChild(img);
-      }
-      for (let k=1;k<=5;k++) cell.classList.remove('img-'+k);
-      cell.classList.add('img-'+(idx+1));
+    listEl.appendChild(card);
+  });
+}
 
-      // 空画像なら隠す
-      const empty = !img.src || img.src === 'about:blank';
-      cell.classList.toggle('hidden', empty);
+/* lightbox */
+function openLightbox(src){
+  const lb = byId('lightbox');
+  byId('lightbox-img').src = src;
+  lb.hidden = false;
+}
+byId('lightbox-close').onclick = () => byId('lightbox').hidden = true;
+byId('lightbox').onclick = (e)=>{ if(e.target.id==='lightbox') byId('lightbox').hidden = true; };
 
-      // DOM順を確定
-      box.appendChild(cell);
-
-      // 画像1は必ず全体表示（ミニマップ用）
-      if (idx === 0) {
-        img.style.objectFit = 'contain';
-        img.style.background = '#0b0f19';
-      } else {
-        img.style.objectFit = 'cover';
-      }
-      // 表示ブロック化
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.display = 'block';
-    });
-  }
-
-  // 初期適用：カードっぽい塊を広めに拾う
-  function applyAll() {
-    const candidates = new Set();
-    document.querySelectorAll('img').forEach(img => {
-      // 画像の親を数段さかのぼって“塊”にする
-      let p = img.parentElement;
-      for (let i=0; i<5 && p && p.parentElement; i++) {
-        p = p.parentElement;
-        if (p.querySelectorAll('img').length >= 3) {
-          candidates.add(p);
-        }
-      }
-    });
-    candidates.forEach(apply);
-  }
-
-  // 初回
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyAll);
-  } else {
-    applyAll();
-  }
-
-  // 追加にも追随
-  const mo = new MutationObserver(() => applyAll());
-  mo.observe(document.body, { childList:true, subtree:true });
-})();
+render();

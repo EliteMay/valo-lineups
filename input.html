@@ -1,109 +1,83 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <title>定点追加</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="css/style.css" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>定点を追加/編集</title>
+<link rel="stylesheet" href="css/style.css?v=1">
 </head>
-<body>
-  <header class="site-header">
-    <div class="brand">VALO LINEUPS</div>
-    <nav class="nav">
-      <a href="index.html" class="btn">ホーム</a>
-      <a href="viewer.html" class="btn">一覧</a>
-    </nav>
-  </header>
+<body class="page page-input">
+<header class="topbar">
+  <div class="title">VALO LINEUPS</div>
+  <nav class="nav">
+    <a class="btn" href="viewer.html">定点一覧</a>
+  </nav>
+</header>
 
-  <main class="container">
-    <section class="panel">
-      <h2>新しい定点</h2>
-      <form id="lineupForm" class="form">
-        <div class="grid-2">
-          <div class="field-row">
-            <label>Map</label>
-            <select id="mapInput" required></select>
-          </div>
-          <div class="field-row">
-            <label>Agent</label>
-            <select id="agentInput" required></select>
-          </div>
-          <div class="field-row">
-            <label>Side</label>
-            <select id="sideInput" required>
-              <option>Attack</option><option>Defense</option>
-            </select>
-          </div>
-          <div class="field-row">
-            <label>Site</label>
-            <select id="siteInput" required>
-              <option>A</option><option>B</option><option>C</option>
-            </select>
-          </div>
-          <div class="field-row">
-            <label>投げ方</label>
-            <select id="usageInput" required>
-              <option>普通打ち</option><option>走り投げ</option><option>歩き投げ</option><option>ジャンプ</option><option>しゃがみ</option>
-            </select>
-          </div>
-          <div class="field-row">
-            <label>ポジ名</label>
-            <input id="posInput" type="text" placeholder="例：B main 解除阻止" required>
-          </div>
-          <div class="field-row">
-            <label>難易度</label>
-            <select id="diffInput">
-              <option>★</option><option>★★</option><option>★★★</option>
-            </select>
-          </div>
-          <div class="field-row">
-            <label>状態</label>
-            <select id="statusInput">
-              <option>安定</option><option>研究中</option><option>要検証</option>
-            </select>
-          </div>
-          <div class="field-row wide">
-            <label>説明（任意）</label>
-            <textarea id="descInput" rows="3" placeholder="※投げ方そのものは見出しや画像でわかるので補足があれば"></textarea>
-          </div>
-          <div class="field-row wide">
-            <label>補足（任意）</label>
-            <textarea id="extraInput" rows="2" placeholder="例：A→B回転、失敗例の注意など"></textarea>
-          </div>
-          <div class="field-row wide">
-            <label>タグ（クリックで選択 / 再クリックで解除）</label>
-            <div id="tagsSelect" class="tags-select"></div>
-            <input id="tagsInput" type="hidden">
-          </div>
-          <div class="field-row">
-            <label>お気に入り</label>
-            <label class="switch"><input id="starInput" type="checkbox"><span>⭐</span></label>
-          </div>
-        </div>
+<main class="container">
+  <form id="form" class="form">
+    <div class="grid grid-2">
+      <div>
+        <label>マップ</label>
+        <select id="map" required></select>
+      </div>
+      <div>
+        <label>エージェント</label>
+        <select id="agent" required></select>
+      </div>
+      <div>
+        <label>サイド</label>
+        <select id="side" required>
+          <option>Attack</option><option>Defense</option>
+        </select>
+      </div>
+      <div>
+        <label>サイト</label>
+        <select id="site">
+          <option value="">（空）</option><option>A</option><option>B</option><option>C</option><option>Both</option>
+        </select>
+      </div>
+      <div class="col-2">
+        <label>ポジ名（呼び方）</label>
+        <input id="pos" placeholder="例：Bメイン通常リコン">
+      </div>
+      <div class="col-2">
+        <label>投げ方（説明）</label>
+        <input id="throw" placeholder="例：走りジャンプ / 左クリック">
+      </div>
+      <div class="col-2">
+        <label>タグ（選択）</label>
+        <div id="tags" class="tag-pills"></div>
+      </div>
+      <div class="col-2">
+        <label>補足/注意点（任意）</label>
+        <textarea id="note" rows="3" placeholder="味方フラッシュと合わせる など"></textarea>
+      </div>
+    </div>
 
-        <h3>画像（クリック→Ctrl+Vで貼付）</h3>
-        <div class="shots-paste">
-          <div class="paste-slot" data-slot="img1">画像1（ミニマップ全体）</div>
-          <div class="paste-slot" data-slot="img2">画像2（画面全体）</div>
-          <div class="paste-slot" data-slot="img3">画像3（合わせる位置）</div>
-          <div class="paste-slot" data-slot="img4">画像4（立ち位置 / 成立時）</div>
-          <div class="paste-slot" data-slot="img5">画像5（非成立 / 相手視点）</div>
-        </div>
+    <h3>画像（クリック → Ctrl+V で貼り付け / 個別削除可）</h3>
+    <p class="muted">推奨：<b>画像1=ミニマップ全体</b>、画像2=画面全体、画像3=合わせ位置、画像4=立ち位置、画像5=非成立/相手視点 など</p>
 
-        <footer class="form-foot">
-          <button id="resetBtn" type="button" class="btn">リセット</button>
-          <button id="clearAllBtn" type="button" class="btn">全削除</button>
-          <span class="spacer"></span>
-          <button id="exportBtn" type="button" class="btn">エクスポート</button>
-          <button id="importBtn" type="button" class="btn">インポート</button>
-          <button type="submit" class="btn accent">保存</button>
-        </footer>
-      </form>
-      <div id="message" class="message"></div>
-    </section>
-  </main>
+    <div class="images">
+      <!-- 順番は保存時に 1,5,3,2,4 並べ替えで表示される -->
+      <div class="img-slot" data-key="img1"><span>画像1（ミニマップ全体）</span><button type="button" class="img-del">×</button><img></div>
+      <div class="img-slot" data-key="img2"><span>画像2（画面全体）</span><button type="button" class="img-del">×</button><img></div>
+      <div class="img-slot" data-key="img3"><span>画像3（合わせ位置）</span><button type="button" class="img-del">×</button><img></div>
+      <div class="img-slot" data-key="img4"><span>画像4（立ち位置）</span><button type="button" class="img-del">×</button><img></div>
+      <div class="img-slot" data-key="img5"><span>画像5（非成立/相手視点）</span><button type="button" class="img-del">×</button><img></div>
+    </div>
 
-  <script src="js/common.js"></script>
-  <script src="js/input.js"></script>
+    <div class="form-actions">
+      <button id="reset" type="button" class="btn">リセット</button>
+      <button id="save" type="submit" class="btn btn-primary">保存する</button>
+      <button id="remove" type="button" class="btn btn-danger" hidden>この定点を削除</button>
+    </div>
+
+    <p class="muted">Win+Shift+S → クリップボードに画像 → 対象枠をクリック → Ctrl+V で貼り付け。</p>
+  </form>
+</main>
+
+<script src="js/common.js?v=1"></script>
+<script src="js/input.js?v=1"></script>
 </body>
 </html>
