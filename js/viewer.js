@@ -312,4 +312,135 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   mo.observe(root, { childList: true, subtree: true });
 })();
+/* ===== 編集パスワード + 画像差し替え（viewer.js の末尾に貼るだけ） ===== */
+
+// -------- 共通: /auth-check で認証（セッション中は再認証なし） ----------
+async function __vl_authOnce(key = 'valolineups_edit_authed') {
+  if (sessionStorage.getItem(key) === '1') return true;
+  const pwd = prompt('編集するにはパスワードが必要です。');
+  if (!pwd) return false;
+  try {
+    const res = await fetch('/auth-check', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    if (res.ok) {
+      sessionStorage.setItem(key, '1');
+      return true;
+    }
+  } catch (_) {}
+  alert('パスワードが違います。');
+  return false;
+}
+
+// -------- 編集モードの開始/終了を検出してフラグ管理 -----------------------
+let __vl_editing = false;
+
+// 「編集」ボタン押下時にパスワードを要求
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button, [role="button"]');
+  if (!btn) return;
+
+  // 1) 編集開始（ボタンのテキストに「編集」が含まれる想定）
+  if (/編集/.test(btn.textContent)) {
+    if (sessionStorage.getItem('valolineups_edit_authed') === '1') {
+      __vl_editing = true;
+      document.body.dataset.editing = '1';
+      return; // 既に認証済みならそのまま通す
+    }
+    // 認証がまだなら一旦止めて認証→成功したら本来のクリックを再実行
+    e.preventDefault(); e.stopPropagation();
+    const ok = await __vl_authOnce('valolineups_edit_authed');
+    if (ok) {
+      __vl_editing = true;
+      document.body.dataset.editing = '1';
+      // 元のハンドラを動かすために再クリック
+      setTimeout(() => btn.click(), 0);
+    }
+  }
+
+  // 2) 編集終了（保存/完了/キャンセル系のボタン）
+  if (/(保存|完了|キャンセル)/.test(btn.textContent)) {
+    __vl_editing = false;
+    delete document.body.dataset.editing;
+  }
+});
+
+// -------- 画像差し替え（編集モード時のみ：クリック→選択 or Ctrl+V） -----
+(function enableImageReplace() {
+  // サムネ画像の selector（合わなければ .lineup-img をHTML側に付けてもOK）
+  const IMG_SEL = '.lineup-img, .images img, .lineup-images img, .card img';
+
+  // dataURL化（縮小）ユーティリティ
+  async function fileToDataUrl(file, maxW = 1600) {
+    const bmp = await createImageBitmap(file);
+    const canvas = document.createElement('canvas');
+    const scale = Math.min(1, maxW / bmp.width);
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.9);
+  }
+
+  // 保存データを更新（localStorage を利用）
+  async function replaceImageForCard(cardEl, imgIndex, dataUrl) {
+    const id = cardEl?.dataset?.id;
+    if (!id) return;
+    const key = 'valolineups_list';
+    const db = JSON.parse(localStorage.getItem(key) || '[]');
+    const idx = db.findIndex(x => String(x.id) === String(id));
+    if (idx < 0) return;
+    db[idx].images = db[idx].images || [];
+    db[idx].images[imgIndex] = dataUrl;
+    localStorage.setItem(key, JSON.stringify(db));
+
+    // 画面も置換
+    const imgs = cardEl.querySelectorAll(IMG_SEL);
+    if (imgs[imgIndex]) imgs[imgIndex].src = dataUrl;
+  }
+
+  // 編集中だけ有効にするクリック→置換
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  document.body.appendChild(fileInput);
+
+  let pending = { card: null, index: -1 };
+
+  document.addEventListener('click', (e) => {
+    if (!__vl_editing) return;
+    const imgEl = e.target.closest(IMG_SEL);
+    if (!imgEl) return;
+    const card = imgEl.closest('[data-id]');
+    if (!card) return;
+    const imgs = Array.from(card.querySelectorAll(IMG_SEL));
+    const imgIndex = imgs.indexOf(imgEl);
+    if (imgIndex < 0) return;
+
+    pending = { card, index: imgIndex };
+    fileInput.value = '';
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', async () => {
+    const f = fileInput.files?.[0];
+    if (!f || !pending.card) return;
+    const url = await fileToDataUrl(f, 1600);
+    await replaceImageForCard(pending.card, pending.index, url);
+    pending = { card: null, index: -1 };
+  });
+
+  // 貼り付け（Ctrl+V）でも置換
+  window.addEventListener('paste', async (e) => {
+    if (!__vl_editing) return;
+    const item = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
+    if (!item || !pending.card) return;
+    const file = item.getAsFile();
+    const url = await fileToDataUrl(file, 1600);
+    await replaceImageForCard(pending.card, pending.index, url);
+    pending = { card: null, index: -1 };
+  });
+})();
 

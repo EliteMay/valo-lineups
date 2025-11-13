@@ -215,4 +215,104 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })();
 })();
+/* ================= 個別画像クリア（下に貼るだけ） =================== */
+/* 想定:
+   - 画像プレビューは各枠の <img> で表示されている
+   - 保存時は <img src>（dataURL）を参照している構造
+   - 枠は「画像1〜画像5」の順で並んでいる（足りない枠はスキップ）
+   - hidden/input で name="image1"〜"image5" を使っている場合もクリアする
+*/
+
+(function enablePerSlotClear() {
+  // ① 最低限のスタイルをJSから注入（CSS編集不要）
+  const style = document.createElement('style');
+  style.textContent = `
+    .vl-slot-wrap { position: relative; }
+    .vl-slot-clear {
+      position:absolute; top:6px; right:6px; width:28px; height:28px;
+      border-radius:999px; border:none; background:#000a; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; cursor:pointer; opacity:0; transition:.15s;
+      backdrop-filter: blur(4px);
+    }
+    .vl-slot-wrap:hover .vl-slot-clear { opacity:1; }
+    .vl-slot-clear:hover { background:#000d; }
+  `;
+  document.head.appendChild(style);
+
+  // ② 画像枠（スロット）を推定してラップ＋クリアボタンを付与
+  function findSlots() {
+    // よくあるクラス名を総当り。該当しなければ「画像プレビューっぽい <img>」で拾う
+    const candidates = Array.from(document.querySelectorAll(
+      '[data-img-index], .image-slot, .img-slot, .paste-zone, .img-drop, .image-box, .image-cell, .img-cell, .img-preview, .image-preview'
+    ));
+
+    // 候補の中で <img> を持つ枠のみ
+    let slots = candidates.filter(el => el.querySelector('img'));
+    if (slots.length === 0) {
+      // フォールバック：画像セクション直下の img の親を枠と見なす
+      const imgs = Array.from(document.querySelectorAll('section, .images, .images-grid, .image-area, .image-group, .card-images, .form-images'))
+        .flatMap(sec => Array.from(sec.querySelectorAll('img')));
+      slots = Array.from(new Set(imgs.map(img => img.parentElement))).filter(Boolean);
+    }
+
+    // 重複/ネストを整理（外側の枠を残す）
+    slots = slots.filter(el => !slots.some(other => other !== el && other.contains(el)));
+    return slots;
+  }
+
+  function attachClear(slot, index) {
+    // 既に付いていればスキップ
+    if (slot.classList.contains('vl-slot-wrap')) return;
+    slot.classList.add('vl-slot-wrap');
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'vl-slot-clear';
+    btn.title = 'この画像だけ削除';
+    btn.textContent = '×';
+    slot.appendChild(btn);
+
+    const clearThis = () => {
+      const img = slot.querySelector('img');
+      if (img) img.src = '';             // 画面から消す
+      // hidden / input がある場合も消す（name=image1..image5に対応）
+      const hidden =
+        document.querySelector(`input[name="image${index+1}"]`) ||
+        document.querySelector(`textarea[name="image${index+1}"]`);
+      if (hidden) hidden.value = '';
+
+      // 内部状態を使っている場合に備えて、よくある場所を消しにいく（存在すれば）
+      try {
+        const state = window.__valoForm || window.__form || window.formData;
+        if (state && Array.isArray(state.images)) state.images[index] = '';
+      } catch {}
+
+      // UIの枠に「未設定」っぽい表示があるなら消去
+      slot.querySelectorAll('[data-has-image],[data-value]').forEach(el=>{
+        el.removeAttribute('data-has-image'); el.dataset.value='';
+      });
+    };
+
+    btn.addEventListener('click', clearThis);
+
+    // Alt+クリックで消去（ボタン狙いにくい場合の保険）
+    slot.addEventListener('click', (e) => {
+      if (e.altKey) { e.preventDefault(); clearThis(); }
+    });
+  }
+
+  function setup() {
+    const slots = findSlots();
+    slots.forEach((slot, i) => attachClear(slot, i)); // i: 0=画像1, 1=画像2...
+  }
+
+  // 初期化
+  setup();
+
+  // 動的に枠が増える場合に備えて監視
+  const mo = new MutationObserver(() => setup());
+  mo.observe(document.body, { childList: true, subtree: true });
+})();
+
 

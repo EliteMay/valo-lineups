@@ -105,3 +105,54 @@ textarea{resize:vertical}
 
 /* footer */
 .site-footer{padding:18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); margin-top:24px}
+/* ===== モザイク画像レイアウト ===== */
+.lineup-card .images-grid { /* 画像の親（今ある親にこのクラスが無ければ viewer.js で付与する） */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 180px;         /* ベース高さ（お好みで） */
+  gap: 12px;
+}
+
+.lineup-card .images-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;             /* はみ出し防止でトリミング */
+  border-radius: 10px;
+  display: block;
+}
+
+/* 画像1が大きい正方形（2段ぶち抜き） */
+.lineup-card .images-grid .img-1 {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  aspect-ratio: 1 / 1;           /* なるべく正方形に */
+}
+
+/* 画像2 → 右上、画像3 → 右中段 */
+.lineup-card .images-grid .img-2 { grid-row: 1; grid-column: 2; }
+.lineup-card .images-grid .img-3 { grid-row: 2; grid-column: 2; }
+
+/* 下段：画像4・5 を横長で左右 */
+.lineup-card .images-grid .img-4 { grid-row: 3; grid-column: 1; }
+.lineup-card .images-grid .img-5 { grid-row: 3; grid-column: 2; }
+
+/* 画像が欠けている時も崩れにくくする */
+.lineup-card .images-grid > .hidden { display:none !important; }
+
+/* スマホは1カラムに落とす */
+@media (max-width: 720px) {
+  .lineup-card .images-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 200px;
+  }
+  .lineup-card .images-grid .img-1,
+  .lineup-card .images-grid .img-2,
+  .lineup-card .images-grid .img-3,
+  .lineup-card .images-grid .img-4,
+  .lineup-card .images-grid .img-5 {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    aspect-ratio: auto;
+  }
+}
+
