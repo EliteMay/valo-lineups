@@ -1,0 +1,260 @@
+:root{
+  --bg:#0b1220;
+  --panel:#0f172a;
+  --panel-soft:#111827;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --line:#1f2937;
+  --accent:#22d3ee;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans JP,sans-serif;
+  color:var(--text); background:linear-gradient(180deg,#0b1220,#0b1220 60%,#0a1020);
+}
+
+/* header / nav */
+.site-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; border-bottom:1px solid var(--line); background:rgba(15,23,42,.8); backdrop-filter:blur(6px);
+  position:sticky; top:0; z-index:10;
+}
+.brand{font-weight:800; letter-spacing:.5px}
+.nav{display:flex; gap:10px}
+
+/* layout */
+.container{width:min(1100px, calc(100% - 24px)); margin:24px auto}
+.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.25);
+}
+.hero{text-align:center; padding:48px 12px}
+.hero h1{margin:0 0 8px}
+.hero-actions{margin-top:14px; display:flex; gap:12px; justify-content:center}
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:18px}
+.card{background:var(--panel); border:1px solid var(--line); padding:16px; border-radius:14px}
+
+/* buttons */
+.btn{border:1px solid var(--line); background:var(--panel-soft); color:var(--text);
+  padding:8px 12px; border-radius:10px; text-decoration:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.accent{border-color:var(--accent); background:var(--accent); color:#0b1220}
+.btn.lg{padding:12px 16px; border-radius:12px}
+
+/* grid/list */
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px}
+.lineup-card{background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden}
+.lineup-card header{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid var(--line)}
+.lineup-card .title{display:flex; flex-wrap:wrap; gap:6px}
+.ops{display:flex; gap:6px}
+.lineup-card .meta{padding:10px 12px; color:var(--muted); font-size:14px}
+.lineup-card .shots{display:grid; grid-template-columns:repeat(2,1fr); gap:4px; padding:8px}
+.lineup-card .shots img{width:100%; height:160px; object-fit:cover; cursor:zoom-in; border-radius:8px}
+
+/* pills */
+.pill{display:inline-flex; align-items:center; padding:3px 8px; font-size:12px; border:1px solid var(--line);
+  border-radius:999px; background:var(--panel-soft); color:var(--text)}
+
+/* filters */
+.filters{display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:8px}
+.filters input, .filters select{width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:#0b1220; color:var(--text)}
+
+/* form */
+.form{display:block}
+.form .grid-2{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
+.field-row{display:flex; flex-direction:column; gap:6px}
+.field-row.wide{grid-column:1/-1}
+label{font-size:12px; color:var(--muted)}
+input[type="text"], input[type="search"], textarea, select{
+  width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:#0b1220; color:var(--text)
+}
+textarea{resize:vertical}
+.switch{display:inline-flex; align-items:center; gap:6px}
+.form-foot{display:flex; align-items:center; gap:8px; margin-top:12px}
+.form-foot .spacer{flex:1}
+
+/* tags chips */
+.tags-select{display:flex; flex-wrap:wrap; gap:6px}
+.chip{border:1px solid #4b5563;background:var(--panel-soft);color:var(--text);font-size:11px;border-radius:999px;padding:4px 10px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip-on{background:var(--accent);color:#020617;border-color:var(--accent)}
+
+/* paste slots */
+.shots-paste{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px; margin-top:8px}
+.paste-slot{border:1px dashed #334155; border-radius:12px; min-height:120px; display:grid; place-items:center; color:#94a3b8; padding:10px; cursor:pointer; background:#0b1220}
+.paste-slot.active{outline:2px solid var(--accent)}
+.paste-slot img{width:100%; height:100%; object-fit:cover; border-radius:10px}
+
+/* message */
+.message{margin-top:8px; color:#a7f3d0}
+.message.error{color:#fecaca}
+
+/* modal (edit) */
+.modal{position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.5)}
+.modal.hidden{display:none}
+.modal-body{width:min(680px, calc(100% - 24px)); background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden}
+.modal-head{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid var(--line)}
+.modal-foot{display:flex; justify-content:flex-end; gap:8px; padding:10px 12px; border-top:1px solid var(--line)}
+.icon{border:1px solid var(--line); background:var(--panel-soft); color:var(--text); border-radius:10px; padding:6px 10px; cursor:pointer}
+
+/* lightbox */
+.lightbox{position:fixed; inset:0; background:rgba(0,0,0,.8); display:grid; place-items:center}
+.lightbox-inner{position:relative; max-width:min(95vw,1100px)}
+.lightbox-inner img{max-width:100%; max-height:90vh; display:block; border-radius:12px}
+.lb-close{position:absolute; top:-10px; right:-10px; border:0; border-radius:999px; width:36px; height:36px; cursor:pointer}
+
+/* footer */
+.site-footer{padding:18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); margin-top:24px}
+/* ===== モザイク画像レイアウト ===== */
+.lineup-card .images-grid { /* 画像の親（今ある親にこのクラスが無ければ viewer.js で付与する） */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 180px;         /* ベース高さ（お好みで） */
+  gap: 12px;
+}
+
+.lineup-card .images-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;             /* はみ出し防止でトリミング */
+  border-radius: 10px;
+  display: block;
+}
+
+/* 画像1が大きい正方形（2段ぶち抜き） */
+.lineup-card .images-grid .img-1 {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  aspect-ratio: 1 / 1;           /* なるべく正方形に */
+}
+
+/* 画像2 → 右上、画像3 → 右中段 */
+.lineup-card .images-grid .img-2 { grid-row: 1; grid-column: 2; }
+.lineup-card .images-grid .img-3 { grid-row: 2; grid-column: 2; }
+
+/* 下段：画像4・5 を横長で左右 */
+.lineup-card .images-grid .img-4 { grid-row: 3; grid-column: 1; }
+.lineup-card .images-grid .img-5 { grid-row: 3; grid-column: 2; }
+
+/* 画像が欠けている時も崩れにくくする */
+.lineup-card .images-grid > .hidden { display:none !important; }
+
+/* スマホは1カラムに落とす */
+@media (max-width: 720px) {
+  .lineup-card .images-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 200px;
+  }
+  .lineup-card .images-grid .img-1,
+  .lineup-card .images-grid .img-2,
+  .lineup-card .images-grid .img-3,
+  .lineup-card .images-grid .img-4,
+  .lineup-card .images-grid .img-5 {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    aspect-ratio: auto;
+  }
+}
+
+/* ===== 強制モザイク配置 ===== */
+.mosaic-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 180px;   /* 高さは好みで調整 */
+  gap:12px;
+}
+.mosaic-grid > img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:10px;
+  display:block;
+}
+
+/* 画像1だけ大きく（2段ぶち抜き） */
+.mosaic-grid > .img-1{ grid-row:1 / span 2; grid-column:1; aspect-ratio:1/1; }
+/* 右上・右中段 */
+.mosaic-grid > .img-2{ grid-row:1; grid-column:2; }
+.mosaic-grid > .img-3{ grid-row:2; grid-column:2; }
+/* 下段左右 */
+.mosaic-grid > .img-4{ grid-row:3; grid-column:1; }
+.mosaic-grid > .img-5{ grid-row:3; grid-column:2; }
+
+/* 画像が無い枠を消す用 */
+.mosaic-grid > .hidden{ display:none !important; }
+
+/* スマホは1カラムに */
+@media (max-width: 720px){
+  .mosaic-grid{
+    grid-template-columns: 1fr;
+    grid-auto-rows: 200px;
+  }
+  .mosaic-grid > .img-1,
+  .mosaic-grid > .img-2,
+  .mosaic-grid > .img-3,
+  .mosaic-grid > .img-4,
+  .mosaic-grid > .img-5{
+    grid-column:1 !important;
+    grid-row:auto !important;
+    aspect-ratio:auto;
+  }
+}
+/* ===== 画像モザイク（正方形 + 右2枚 + 下2枚） ===== */
+.mosaic-grid{
+  --cell: 220px;                 /* 全体の高さ感はここで調整 */
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "a b"
+    "a c"
+    "d e";
+  gap:12px;
+}
+
+.mosaic-grid > .cell{
+  position:relative;
+  overflow:hidden;
+  border-radius:10px;
+}
+
+/* 画像はラッパ .cell の中でフィット */
+.mosaic-grid > .cell > img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* 1: 左上 正方形で2段ぶち抜き */
+.mosaic-grid > .cell.img-1{
+  grid-area:a;
+  aspect-ratio: 1 / 1;
+}
+
+/* 2,3: 右上 / 右中段（高さは --cell） */
+.mosaic-grid > .cell.img-2{ grid-area:b; height:var(--cell); }
+.mosaic-grid > .cell.img-3{ grid-area:c; height:var(--cell); }
+
+/* 4,5: 下段 左右（高さは --cell） */
+.mosaic-grid > .cell.img-4{ grid-area:d; height:var(--cell); }
+.mosaic-grid > .cell.img-5{ grid-area:e; height:var(--cell); }
+
+.mosaic-grid > .cell.hidden{ display:none !important; }
+
+/* スマホは1カラム */
+@media (max-width: 720px){
+  .mosaic-grid{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "a"
+      "b"
+      "c"
+      "d"
+      "e";
+  }
+  .mosaic-grid > .cell{
+    height:auto !important;
+    aspect-ratio:auto !important;
+  }
+}
+
