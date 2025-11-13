@@ -306,4 +306,41 @@ textarea{resize:vertical}
     aspect-ratio:auto !important;
   }
 }
+/* グリッド形状（左上正方形2段／右上・右中段／下段2つ正方形） */
+.mosaic-grid{
+  --cell: 220px;                     /* 高さの基準 */
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "a b"
+    "a c"
+    "d e";
+  gap:12px;
+}
+.mosaic-grid > .cell{
+  position:relative;
+  overflow:hidden;
+  border-radius:10px;
+}
+.mosaic-grid > .cell.hidden{ display:none !important; }
+
+/* 1枚目は正方形(2段ぶち抜き)＋中身は contain で全体表示 */
+.mosaic-grid > .cell.img-1{ grid-area:a; aspect-ratio:1/1; }
+
+/* 右上・右中段は横長（高さは --cell） */
+.mosaic-grid > .cell.img-2{ grid-area:b; height:var(--cell); }
+.mosaic-grid > .cell.img-3{ grid-area:c; height:var(--cell); }
+
+/* 下段は正方形2枚 */
+.mosaic-grid > .cell.img-4{ grid-area:d; aspect-ratio:1/1; height:auto; }
+.mosaic-grid > .cell.img-5{ grid-area:e; aspect-ratio:1/1; height:auto; }
+
+/* スマホは1カラム */
+@media (max-width: 720px){
+  .mosaic-grid{
+    grid-template-columns: 1fr;
+    grid-template-areas: "a" "b" "c" "d" "e";
+  }
+  .mosaic-grid > .cell{ height:auto !important; aspect-ratio:auto !important; }
+}
 
