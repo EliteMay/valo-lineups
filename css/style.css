@@ -1,379 +1,243 @@
-/* ================================
-   VALO LINEUPS — Polished Theme
-   ★ HTML/JSはそのまま。CSSだけ差替え
-   ================================ */
+/* =========================================================
+   VALO LINEUPS — Classic Stable Layout (Revert)
+   置換用: css/style.css
+   ※ HTML/JS変更不要。ハードリロード(Ctrl+F5)推奨。
+   ========================================================= */
 
-/* -------- CSS Variables -------- */
+/* ---------- Base ---------- */
 :root{
-  --bg: #0b1220;
-  --panel: #101827;
-  --panel-2: #0e1726;
-  --elev: #0f1b2e;
-  --text: #e5ecff;
-  --muted: #a3b2d1;
-  --accent: #79c0ff;
-  --accent-2: #7ee787;
-  --chip: #23314c;
-  --danger: #ff6b6b;
-  --warn: #f7b955;
-  --ok: #22c55e;
-  --border: #1f2a44;
-  --shadow: 0 6px 20px rgba(0,0,0,.35);
-  --radius: 14px;
-  --radius-sm: 10px;
-  --radius-xs: 8px;
+  --bg:#0f172a;       /* 背景 */
+  --panel:#111827;    /* パネル */
+  --card:#0b1220;     /* カード */
+  --muted:#94a3b8;    /* 補助テキスト */
+  --text:#e5e7eb;     /* 基本文字 */
+  --accent:#38bdf8;   /* ボタン */
+  --accent-2:#22d3ee; /* アクセント薄 */
+  --chip:#1f2937;     /* タグ */
+  --danger:#ef4444;   /* 危険系 */
+  --ok:#10b981;       /* 良い */
+  --radius:14px;
 }
 
-/* -------- Base -------- */
-*{ box-sizing: border-box }
-html,body{
-  height:100%;
-  background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(65,105,225,.08), transparent 60%),
-    radial-gradient(900px 600px at 0% 110%, rgba(127,255,212,.06), transparent 60%), 
-    var(--bg);
-  color:var(--text);
-  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans JP, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  letter-spacing:.02em;
-}
-a{ color:var(--accent); text-decoration:none }
-a:hover{ text-decoration:underline }
-img{ max-width:100%; display:block }
-button{ font: inherit }
-
-/* -------- Containers -------- */
-.container{
-  max-width: 1200px;
-  margin: 28px auto 64px;
-  padding: 0 20px;
-}
-.section{
-  background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 18px 18px 16px;
-}
-
-/* -------- Header / Index -------- */
-.header{
-  display:flex; align-items:center; gap:14px;
-  margin: 10px 0 18px;
-}
-.header__logo{
-  width:40px; height:40px; border-radius:10px;
-  background: radial-gradient(60% 60% at 40% 30%, #ff8181 0 60%, transparent 60%), #11192a;
-  border:1px solid var(--border);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
-}
-.header h1{
+*{box-sizing:border-box}
+html,body{height:100%}
+html{scroll-behavior:smooth}
+body{
   margin:0;
-  font-size: clamp(20px, 2.6vw, 28px);
-  font-weight: 700;
-  letter-spacing:.02em;
-}
-.header__note{
-  color: var(--muted);
-  font-size: 13px;
-}
-
-/* -------- Buttons -------- */
-.btn{
-  appearance:none; border:0; cursor:pointer;
-  background: linear-gradient(180deg, #1b2a45, #142034);
-  border:1px solid var(--border);
-  color: var(--text);
-  padding: 10px 14px;
-  border-radius: 12px;
-  line-height:1;
-  display:inline-flex; align-items:center; gap:10px;
-  box-shadow: var(--shadow);
-  transition: transform .08s ease, filter .2s ease, background .2s ease;
-}
-.btn:hover{ transform: translateY(-1px); filter: brightness(1.05) }
-.btn:active{ transform: translateY(0) }
-.btn--primary{
-  background: linear-gradient(180deg, #2b4879, #20365a);
-  border-color:#2a4370;
-}
-.btn--accent{
-  background: linear-gradient(180deg, #3381c9, #2b6aa6);
-  border-color:#2e6cad;
-}
-.btn--danger{
-  background: linear-gradient(180deg, #c94141, #9f2f2f);
-  border-color:#a33636;
-}
-.btn--ghost{
-  background: transparent;
-  border-color: var(--border);
-}
-.btn--pill{ border-radius: 999px; }
-
-/* ボタン群の行 */
-.actions{ display:flex; flex-wrap:wrap; gap:10px }
-
-/* -------- Inputs / Selects -------- */
-label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px 2px }
-input[type="text"], input[type="search"], textarea, select{
-  width:100%;
-  background: #0f1626;
-  border:1px solid var(--border);
+  background: radial-gradient(1200px 800px at 80% -10%, rgba(56,189,248,.06), transparent 60%),
+              radial-gradient(900px 700px at -10% 60%, rgba(34,211,238,.05), transparent 50%),
+              var(--bg);
   color:var(--text);
-  padding: 10px 12px;
-  border-radius: 10px;
-  outline: none;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  font:14px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
 }
-select{
-  background-image: linear-gradient(180deg, #111a2b, #0c1422);
-}
-input:focus, textarea:focus, select:focus{
-  border-color: #3d63ff;
-  box-shadow: 0 0 0 3px rgba(61,99,255,.20);
-}
-textarea{ min-height: 92px; resize: vertical }
 
-/* フィルタバー */
+/* ---------- Links / Buttons ---------- */
+a{color:var(--accent)}
+button{
+  background:#192138;
+  border:1px solid #24314f;
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:10px;
+  cursor:pointer;
+}
+button:hover{filter:brightness(1.1)}
+.btn-primary{
+  background:linear-gradient(180deg, #3cc9ff, #1ea8ff);
+  border:none;
+  color:#021423;
+}
+.btn-danger{background:#2a1420;border-color:#4a1b2e;color:#ffd6de}
+.btn-ghost{background:transparent;border:1px solid #25324f}
+
+/* ---------- Layout ---------- */
+.container{
+  max-width:1200px;
+  margin:32px auto;
+  padding:0 20px;
+}
+
+/* ---------- Header / Top ---------- */
+.topbar{
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.topbar h1{
+  margin:0;
+  font-weight:700;
+  letter-spacing:.02em;
+  font-size:22px;
+}
+
+/* ---------- Filter Panel ---------- */
+.filter-panel{
+  background:linear-gradient(180deg, rgba(30,41,59,.5), rgba(15,23,42,.5));
+  border:1px solid #223059;
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:20px;
+  box-shadow: 0 12px 40px rgba(2,8,23,.4) inset, 0 1px 0 rgba(255,255,255,.05);
+}
 .filters{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+}
+.select, .input{
+  background:#0b1220;
+  border:1px solid #223059;
+  color:var(--text);
+  height:38px;
+  border-radius:10px;
+  padding:0 10px;
+}
+.input{width:260px}
+
+/* ---------- List ---------- */
+.lineup-list{
   display:grid;
-  grid-template-columns: repeat(6, minmax(140px,1fr));
-  gap:12px;
-}
-.filters .wide{ grid-column: span 2 }
-@media (max-width: 1020px){
-  .filters{ grid-template-columns: repeat(3, 1fr) }
-}
-@media (max-width: 640px){
-  .filters{ grid-template-columns: 1fr 1fr }
+  grid-template-columns: 1fr;         /* 1カラム（横幅いっぱい） */
+  gap:18px;
 }
 
-/* -------- Chips / Tags -------- */
-.chips{ display:flex; flex-wrap:wrap; gap:8px }
-.chip{
-  background: var(--chip);
-  color: var(--text);
-  border:1px solid var(--border);
-  font-size:12px;
-  padding:7px 10px;
-  border-radius: 999px;
-}
-.chip--ok{ background:#1f3a2b; border-color:#2c5d3e; color:#d5ffe5 }
-.chip--warn{ background:#3a2f1f; border-color:#5d4b2c; color:#ffe9c5 }
-
-/* -------- Cards / Empty state -------- */
-.card{
-  background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border:1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow);
-}
-.empty{
-  display:flex; align-items:center; justify-content:center;
-  height: 180px;
-  color: var(--muted);
-  border: 1px dashed var(--border);
-  background: #0e1422;
-  border-radius: var(--radius);
-}
-
-/* -------- Gallery / Lineup list -------- */
-.grid{
-  display:grid;
-  gap:12px;
-}
-
-/* 1) 一覧（viewer.html）のカードグリッド */
-.grid--cards{
-  grid-template-columns: repeat(12, 1fr);
-}
-@media (max-width: 1200px){ .grid--cards{ grid-template-columns: repeat(8, 1fr) } }
-@media (max-width: 780px){ .grid--cards{ grid-template-columns: repeat(4, 1fr) } }
-@media (max-width: 520px){ .grid--cards{ grid-template-columns: repeat(2, 1fr) } }
-
+/* ---------- Card ---------- */
 .lineup{
-  grid-column: span 6;        /* 2列カード */
-  background: linear-gradient(180deg, #0f1828, #0d1422);
-  border:1px solid var(--border);
-  border-radius: var(--radius);
+  background:linear-gradient(180deg, rgba(2,8,23,.85), rgba(2,8,23,.7));
+  border:1px solid #1e2c54;
+  border-radius:var(--radius);
   overflow:hidden;
-  box-shadow: var(--shadow);
-  transition: transform .08s ease, filter .2s ease;
+  box-shadow: 0 8px 30px rgba(2,8,23,.6);
 }
-.lineup:hover{ transform: translateY(-2px); filter: brightness(1.03) }
 
 .lineup__head{
-  display:flex; gap:8px; align-items:center; justify-content:space-between;
-  padding: 12px 14px 8px;
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  padding:12px 14px;
+  border-bottom:1px solid #17213f;
+  background:linear-gradient(180deg, rgba(15,23,42,.7), rgba(2,8,23,.5));
 }
-.lineup__meta{
-  display:flex; flex-wrap:wrap; gap:8px;
-  color: var(--muted); font-size: 12px;
+.chip{
+  background:var(--chip);
+  color:#cfe7ff;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid #2a3a60;
+  font-size:12px;
 }
-.lineup__title{
-  font-weight: 700; margin: 0; font-size: 15px;
-}
+
+/* ---------- Gallery（安定版） ----------
+   ・1枚目は横いっぱい（比率 16:9）
+   ・残りは2列グリッド（同じ高さ）
+   ・画像は cover で切り取り、クリックで拡大
+--------------------------------------- */
 .lineup__gallery{
-  display:grid; gap:8px;
+  display:grid;
   grid-template-columns: 1fr 1fr;
-  padding: 10px;
+  gap:10px;
+  padding:12px;
 }
 .lineup__shot{
-  background:#0a1220; border:1px solid var(--border); border-radius:12px;
-  overflow:hidden; aspect-ratio: 16 / 9; position:relative;
+  position:relative;
+  background:#0a1020;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid #1b2748;
+  height:180px;        /* 同じ高さに固定（崩れない） */
 }
 .lineup__shot img{
   width:100%; height:100%;
-  object-fit: cover;            /* 一覧では切り取って見栄え優先 */
+  object-fit:cover;
   display:block;
+  transition:transform .25s ease-out, opacity .25s ease-out;
+}
+.lineup__shot:hover img{transform:scale(1.02); opacity:.92}
+
+/* 1枚目だけ横いっぱい */
+.lineup__shot.is-first{
+  grid-column: 1 / -1;
+  height:260px;                   /* 最初の minimap を少し大きく */
 }
 
-/* 2) 詳細カードの“5枚レイアウト” 用 */
-.gallery5{
-  display:grid; gap:10px;
-  grid-template-areas:
-    "A  B"
-    "C  D"
-    "E  E";
-  grid-template-columns: 1fr 1fr;
+/* ---------- Badges / Footer ---------- */
+.badges{
+  display:flex; gap:8px; flex-wrap:wrap;
+  padding:0 12px 14px;
 }
-.gallery5 > .shot{ border-radius:12px; overflow:hidden; border:1px solid var(--border); background:#0a1220; position:relative }
-.gallery5 > .shot img{ width:100%; height:100%; object-fit: cover }
+.badge{
+  background:#071022;
+  border:1px solid #142042;
+  color:#9db7e9;
+  border-radius:8px; padding:3px 8px; font-size:12px;
+}
 
-.gallery5 .shot--1{ grid-area:A; aspect-ratio: 5/3 } /* minimap 等 */
-.gallery5 .shot--2{ grid-area:B; aspect-ratio: 5/3 }
-.gallery5 .shot--3{ grid-area:C; aspect-ratio: 16/9 }
-.gallery5 .shot--4{ grid-area:D; aspect-ratio: 16/9 }
-.gallery5 .shot--5{ grid-area:E; aspect-ratio: 21/9 } /* ワイド */
-
-/* 3) 画像モーダル（拡大） */
-.modal{
-  position: fixed; inset:0; z-index: 60;
-  display:none; align-items:center; justify-content:center;
-  background: rgba(7,10,18,.72);
-  backdrop-filter: blur(2px);
+/* ---------- Image Viewer (modal) ---------- */
+.viewer{
+  position:fixed; inset:0; z-index:9999; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(2,8,23,.72);
+  backdrop-filter: blur(6px);
 }
-.modal.is-open{ display:flex }
-.modal__inner{
-  max-width: min(1200px, 92vw);
-  max-height: 88vh;
-  border-radius: 14px;
-  overflow: hidden;
-  border:1px solid var(--border);
-  background: #0b1423;
-  box-shadow: 0 20px 80px rgba(0,0,0,.6);
+.viewer.is-open{display:flex}
+.viewer__img-wrap{
+  max-width:min(95vw,1100px);
+  max-height:85vh;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid #2a3a60;
+  box-shadow:0 20px 80px rgba(0,0,0,.5);
 }
-.modal__img{
-  display:block; width:100%; height:100%; object-fit: contain; /* 拡大時は全体を収める */
-  background:#0a1220;
-}
-.modal__close{
-  position:absolute; top:18px; right:18px;
+.viewer__img{display:block; width:100%; height:auto}
+.viewer__close{
+  position:fixed; top:22px; right:22px;
   width:38px; height:38px; border-radius:999px;
   display:grid; place-items:center;
-  border:1px solid var(--border);
-  background:#111a2b; color:#fff; cursor:pointer;
-  box-shadow: var(--shadow);
+  background:#0b1220; border:1px solid #223059; color:#cfe7ff;
 }
 
-/* -------- Tables / Pills -------- */
-.pills{ display:flex; flex-wrap:wrap; gap:6px }
-.pill{
-  background:#0d1626; border:1px solid var(--border); border-radius:10px;
-  color:var(--muted); font-size:12px; padding:6px 8px;
-}
-
-/* -------- Forms (input.html) -------- */
+/* ---------- Editor / Input page（見た目だけ） ---------- */
 .form{
-  display:grid; gap:16px;
-  grid-template-columns: repeat(12, 1fr);
+  background:linear-gradient(180deg, rgba(15,23,42,.6), rgba(2,8,23,.6));
+  border:1px solid #1e2c54; border-radius:var(--radius);
+  padding:18px; box-shadow:0 8px 30px rgba(2,8,23,.6);
 }
-.form .col-12{ grid-column: span 12 }
-.form .col-6{ grid-column: span 6 }
-.form .col-4{ grid-column: span 4 }
-.form .col-3{ grid-column: span 3 }
-@media (max-width: 920px){
-  .form .col-6{ grid-column: span 12 }
-  .form .col-4{ grid-column: span 6 }
-  .form .col-3{ grid-column: span 6 }
+.form-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px}
+.form .textarea{
+  width:100%; min-height:84px;
+  background:#0b1220; border:1px solid #223059; color:var(--text);
+  border-radius:10px; padding:8px 10px; resize:vertical;
 }
 
-.box{
-  background: #0e1726; border:1px solid var(--border); border-radius:12px; padding:14px;
+/* 画像貼り付けフィールド */
+.paste-grid{
+  display:grid; grid-template-columns: 1fr 1fr; gap:12px;
+}
+.paste-item{
+  border:1px dashed #2a3a60; border-radius:10px; background:#0b1220;
+  min-height:120px; padding:10px; color:#93a8d1; position:relative;
+}
+.paste-item.is-first{grid-column:1 / -1}
+
+/* 個別削除ボタン */
+.paste-remove{
+  position:absolute; top:8px; right:8px;
+  background:#1d2744; border:1px solid #2a3a60; color:#cfe7ff;
+  width:26px; height:26px; border-radius:6px; display:grid; place-items:center;
 }
 
-/* 画像アップロード（ペースト）領域の見た目 */
-.drop{
-  border:1px dashed #294061; border-radius:12px; background:#0a1322;
-  padding:14px; color:var(--muted);
-}
-.drop--focus{ outline:3px solid rgba(61,99,255,.25); }
-
-/* 補助ボタン */
-.mini{
-  font-size:12px; padding:6px 10px; border-radius:9px;
-  background:#0f1a2c; border:1px solid var(--border); color:#bcd3ff;
+/* ---------- Empty ---------- */
+.empty{
+  color:var(--muted); padding:18px;
+  border:1px dashed #25324f; border-radius:12px;
+  text-align:center; background:rgba(2,8,23,.35);
 }
 
-/* エクスポート/インポートボタン行（viewer） */
-.row-actions{ display:flex; gap:10px; flex-wrap:wrap }
-
-/* -------- Utilities -------- */
-.m0{ margin:0 } .mt8{ margin-top:8px } .mt12{ margin-top:12px } .mt16{ margin-top:16px }
-.mt24{ margin-top:24px } .mb0{ margin-bottom:0 } .mb8{ margin-bottom:8px }
-.center{ text-align:center }
-.hide{ display:none !important }
-
-/* -------- Subtle divider -------- */
-.hr{
-  height:1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
-  border:0; margin: 14px 0;
+/* ---------- Responsive ---------- */
+@media (max-width: 860px){
+  .lineup__shot{height:160px}
+  .lineup__shot.is-first{height:220px}
 }
-
-/* -------- Nice scrollbars -------- */
-*{
-  scrollbar-width: thin; scrollbar-color: #2d4269 transparent;
+@media (max-width: 560px){
+  .filters{gap:8px}
+  .input{width:100%}
+  .lineup__gallery{grid-template-columns: 1fr; }
+  .lineup__shot{height:200px}
+  .lineup__shot.is-first{height:220px}
+  .paste-grid{grid-template-columns:1fr}
 }
-*::-webkit-scrollbar{ height:10px; width:10px }
-*::-webkit-scrollbar-thumb{
-  background: #2d4269; border-radius: 10px; border: 3px solid transparent; background-clip: padding-box;
-}
-*::-webkit-scrollbar-track{ background: transparent }
-
-/* -------- Footer / Note -------- */
-.note{ color:var(--muted); font-size:12px }
-/* ======= Revert Patch: 以前の並びに近づける最小修正 ======= */
-
-/* 一覧カードを横幅いっぱい（1カラム）に戻す */
-.lineup{ grid-column: 1 / -1; }
-
-/* 一覧のサムネはシンプルに 2カラム・同じ高さ */
-.lineup__gallery{
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.lineup__shot{
-  aspect-ratio: auto;
-  height: 180px;              /* ここお好みで 160〜220px に調整可 */
-}
-.lineup__shot img{
-  object-fit: cover;
-}
-
-/* 5枚レイアウトは一旦“縦に並べる”に戻す（崩れ防止） */
-.gallery5{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-.gallery5 .shot{
-  aspect-ratio: auto;
-  height: auto;
-}
-.gallery5 .shot img{
-  width: 100%;
-  height: auto;
-  object-fit: contain;        /* 拡大時の切れ防止を優先 */
-}
-
