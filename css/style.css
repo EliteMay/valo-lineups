@@ -343,3 +343,37 @@ textarea{ min-height: 92px; resize: vertical }
 
 /* -------- Footer / Note -------- */
 .note{ color:var(--muted); font-size:12px }
+/* ======= Revert Patch: 以前の並びに近づける最小修正 ======= */
+
+/* 一覧カードを横幅いっぱい（1カラム）に戻す */
+.lineup{ grid-column: 1 / -1; }
+
+/* 一覧のサムネはシンプルに 2カラム・同じ高さ */
+.lineup__gallery{
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.lineup__shot{
+  aspect-ratio: auto;
+  height: 180px;              /* ここお好みで 160〜220px に調整可 */
+}
+.lineup__shot img{
+  object-fit: cover;
+}
+
+/* 5枚レイアウトは一旦“縦に並べる”に戻す（崩れ防止） */
+.gallery5{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.gallery5 .shot{
+  aspect-ratio: auto;
+  height: auto;
+}
+.gallery5 .shot img{
+  width: 100%;
+  height: auto;
+  object-fit: contain;        /* 拡大時の切れ防止を優先 */
+}
+
