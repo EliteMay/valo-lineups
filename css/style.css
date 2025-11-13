@@ -257,4 +257,53 @@ textarea{resize:vertical}
     aspect-ratio:auto !important;
   }
 }
+/* ========== 画像のフィット調整 ========== */
+
+/* デフォはトリミング（カッコよく見せたい通常画像用） */
+.mosaic-grid > .cell > img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* 画像1（ミニマップ）は必ず全体表示 */
+.mosaic-grid > .cell.img-1{
+  grid-area:a;
+  /* 正方形の大きい枠 */
+  aspect-ratio: 1 / 1;
+}
+.mosaic-grid > .cell.img-1 > img{
+  object-fit: contain;           /* ← 全体が入る */
+  background: #0b0f19;           /* 余白が出る時の背景色（好みで） */
+}
+
+/* 右上・右中段は高さ一定の横長 */
+.mosaic-grid > .cell.img-2{ grid-area:b; height:var(--cell); }
+.mosaic-grid > .cell.img-3{ grid-area:c; height:var(--cell); }
+
+/* 下段は正方形2枚に固定（高さはautoにして正方形優先） */
+.mosaic-grid > .cell.img-4{
+  grid-area:d;
+  aspect-ratio: 1 / 1;
+  height:auto;
+}
+.mosaic-grid > .cell.img-5{
+  grid-area:e;
+  aspect-ratio: 1 / 1;
+  height:auto;
+}
+
+/* スマホは1カラムで等幅、縦は自動 */
+@media (max-width: 720px){
+  .mosaic-grid{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "a" "b" "c" "d" "e";
+  }
+  .mosaic-grid > .cell{
+    height:auto !important;
+    aspect-ratio:auto !important;
+  }
+}
 
