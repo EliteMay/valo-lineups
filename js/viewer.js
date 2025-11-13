@@ -5,18 +5,22 @@ const listEl  = byId('list');
 const mapSel  = byId('f-map');
 const agentSel= byId('f-agent');
 
+/* 初期UI構築 */
 fillSelectOptions(mapSel, MAPS);
 fillSelectOptions(agentSel, AGENTS);
 
+/* クリア */
 byId('f-clear').onclick = () => {
   qsa('#filters select,#filters input').forEach(el => el.value = '');
   render();
 };
 
+/* 変更で再描画 */
 ['f-map','f-agent','f-side','f-site','f-throw','f-q'].forEach(id=>{
   byId(id).addEventListener('input', render);
 });
 
+/* Export / Import / Wipe */
 byId('export').onclick = () => {
   const blob = new Blob([ localStorage.getItem(STORAGE_KEY) || '[]' ], { type:'application/json' });
   const a = document.createElement('a');
@@ -46,6 +50,18 @@ byId('wipe').onclick = ()=>{
   }
 };
 
+/* ===== ライトボックスの初期状態を必ず閉じておく ===== */
+const lb = byId('lightbox');
+if (lb) lb.hidden = true;                      // 初期で非表示
+document.addEventListener('keydown', (e)=>{   // ESC で閉じる
+  if (e.key === 'Escape' && lb) lb.hidden = true;
+});
+lb?.addEventListener('click', (e)=>{          // 背景クリックで閉じる
+  if (e.target === lb) lb.hidden = true;
+});
+byId('lightbox-close').onclick = () => { lb.hidden = true; };
+
+/* ===== 画面描画 ===== */
 function filterList(all){
   const m   = mapSel.value.trim().toLowerCase();
   const a   = agentSel.value.trim().toLowerCase();
@@ -99,21 +115,24 @@ function render(){
     card.appendChild(head);
 
     // 画像表示順: 1,5,3,2,4
-    const imgs = [it.img1, it.img5, it.img3, it.img2, it.img4].filter(Boolean);
+    const imgsRaw = [it.img1, it.img2, it.img3, it.img4, it.img5];
+    const imgs = ORDER.map(i => imgsRaw[i]).filter(Boolean);
+
     if(imgs.length){
-      const box = document.createElement('div');
-      box.className = 'mosaic-grid';
+      const grid = document.createElement('div');
+      grid.className = 'mosaic-grid';
       imgs.forEach((src, idx)=>{
         const cell = document.createElement('div');
-        cell.className = 'cell img-' + (idx+1);
+        cell.className = `cell img-${idx+1}`;
         const img = document.createElement('img');
         img.src = src; img.alt='';
-        img.onclick = () => openLightbox(src);
+        img.addEventListener('click', ()=>openLightbox(src));
         cell.appendChild(img);
-        box.appendChild(cell);
+        grid.appendChild(cell);
       });
-      card.appendChild(box);
+      card.appendChild(grid);
     }
+
     if(it.note){
       const p = document.createElement('div');
       p.className = 'card-head';
@@ -121,6 +140,7 @@ function render(){
       card.appendChild(p);
     }
 
+    // アクション
     const actions = document.createElement('div');
     actions.className = 'card-actions';
     const editBtn = document.createElement('button');
@@ -147,13 +167,10 @@ function render(){
   });
 }
 
-/* lightbox */
+/* Lightbox open */
 function openLightbox(src){
-  const lb = byId('lightbox');
   byId('lightbox-img').src = src;
   lb.hidden = false;
 }
-byId('lightbox-close').onclick = () => byId('lightbox').hidden = true;
-byId('lightbox').onclick = (e)=>{ if(e.target.id==='lightbox') byId('lightbox').hidden = true; };
 
 render();

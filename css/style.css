@@ -1,104 +1,103 @@
+/* ベース */
 :root{
-  --bg:#0b1220;
-  --panel:#0e1a2b;
-  --text:#e6eefb;
-  --muted:#9bb1d4;
-  --primary:#68c7ff;
-  --danger:#ff6b7a;
-  --card:#0f1e34;
-  --border:#1f3555;
-  --radius:14px;
-  --gap:14px;
+  --bg:#0f172a; --panel:#111827; --text:#e5e7eb; --muted:#9ca3af;
+  --accent:#60a5fa; --danger:#ef4444; --chip:#1f2937; --chipText:#e5e7eb;
+  --card:#0b1220;
 }
-
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"ヒラギノ角ゴ ProN",sans-serif}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text); background:radial-gradient(1200px 800px at 70% -200px,#0b1220 0,#0b1220 40%,#0f172a 100%);
+  font:14px/1.6 system-ui,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans JP","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+}
 
-.container{max-width:1200px;margin:0 auto;padding:24px}
-.topbar{position:sticky;top:0;z-index:10;background:rgba(11,18,32,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border)}
-.topbar .title{font-weight:700;letter-spacing:.5px}
+/* hidden を確実に消す */
+[hidden]{ display:none !important; }
 
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border);background:#0c1830;color:var(--text);border-radius:10px;text-decoration:none;cursor:pointer}
-.btn:hover{border-color:#2a4471}
-.btn-primary{background:linear-gradient(180deg,#26a0ff,#157fff);border-color:#0f65c9}
-.btn-danger{background:#b42238;border-color:#a11e33}
-.btn:disabled{opacity:.6;pointer-events:none}
+/* ヘッダー */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  display:flex; gap:12px; align-items:center; justify-content:space-between;
+  padding:14px 18px; background:rgba(10,15,25,.75); backdrop-filter: blur(6px); border-bottom:1px solid #0b1a33;
+}
+.brand{font-weight:700; letter-spacing:.06em}
+.nav{display:flex; gap:8px}
+.container{max-width:1200px; margin:24px auto; padding:0 16px}
 
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 16px 8px;margin-bottom:18px}
-.panel h2{margin:0 0 8px 0}
-.filters{display:flex;gap:10px;flex-wrap:wrap}
-.filters select,.filters input{background:#0c1830;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+/* 共通UI */
+.btn{
+  appearance:none; border:1px solid #223; background:#0e1a2b; color:#cfd9ff;
+  padding:8px 12px; border-radius:10px; cursor:pointer;
+}
+.btn:hover{background:#122038}
+.btn-primary{background:linear-gradient(180deg,#3b82f6,#2563eb); border-color:#2950c8; color:#fff}
+.btn-danger{background:#2a0f14; border-color:#4c1d1d; color:#ffb4b4}
+.btn-danger:hover{background:#3a141a}
+.select,.input{
+  background:#0a1220; color:#e5e7eb; border:1px solid #1d2b40; border-radius:10px;
+  padding:8px 10px; outline:none; min-width:120px;
+}
+.input{min-width:260px}
 
-.list{display:grid;gap:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.card-head{padding:14px}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.chip{background:#132747;border:1px solid var(--border);padding:2px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
-.title{margin:0 0 2px 0;font-size:18px}
-.sub{color:var(--muted);font-size:13px}
+/* パネル */
+.panel{background:rgba(10,18,32,.65); border:1px solid #0b1a33; border-radius:16px; padding:16px}
+.panel-title{margin:0 0 10px;font-size:16px}
+.filter-row{display:flex; gap:10px; flex-wrap:wrap}
+.filter-actions{margin-top:12px; display:flex; gap:8px}
 
-.card-actions{display:flex;gap:8px;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--border)}
-
+/* 一覧カード */
+.list{display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:16px}
+@media (min-width:860px){ .list{grid-template-columns:repeat(2,minmax(0,1fr));} }
+.card{
+  background:linear-gradient(180deg,rgba(13,20,36,.9),rgba(8,12,22,.9));
+  border:1px solid #0b1a33; border-radius:16px; overflow:hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.card-head{padding:12px 14px}
+.title{margin:.2em 0 .1em; font-size:16px}
+.sub{color:var(--muted); font-size:12px}
 .muted{color:var(--muted)}
-code{background:#09111f;border:1px solid var(--border);padding:2px 6px;border-radius:6px;color:#8bd2ff}
 
-/* Mosaic layout: 1(正方形,contain) / 2横長 / 3横長 / 4正方形 / 5正方形 */
+/* チップ */
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px;
+  background:linear-gradient(90deg,#12223a,#101d31); border:1px solid #1c2d4a; color:#dbe7ff; font-size:12px;
+}
+
+/* モザイクグリッド (1,5,3,2,4) */
 .mosaic-grid{
-  --h:220px;
-  display:grid;
+  display:grid; gap:6px; padding:6px;
   grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    "a b"
-    "a c"
-    "d e";
-  gap:12px; padding:0 12px 12px 12px;
+  grid-template-rows: auto auto auto;
 }
-.mosaic-grid .cell{background:#0a1528;border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative}
-.mosaic-grid .cell img{width:100%;height:100%;display:block;object-fit:cover}
+.mosaic-grid .cell{position:relative; overflow:hidden; border-radius:12px; background:#0a1220}
+.mosaic-grid img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .25s}
+.mosaic-grid .cell:hover img{transform:scale(1.02)}
+/* 配置:   1: 左上全幅  2: 右上大  3: 中央右細長  4: 左下  5: 右下 */
+.mosaic-grid .img-1{ grid-column: 1 / -1; grid-row: 1; height:260px; }
+.mosaic-grid .img-2{ grid-column: 2; grid-row: 2 / span 2; height:100%; min-height:260px }
+.mosaic-grid .img-3{ grid-column: 1; grid-row: 2; height:120px }
+.mosaic-grid .img-4{ grid-column: 1; grid-row: 3; height:120px }
+.mosaic-grid .img-5{ grid-column: 2; grid-row: 1; height:120px }
 
-.mosaic-grid .img-1{grid-area:a; aspect-ratio:1/1}
-.mosaic-grid .img-1 img{object-fit:contain; background:#081225}
-.mosaic-grid .img-2{grid-area:b; height:var(--h)}
-.mosaic-grid .img-3{grid-area:c; height:var(--h)}
-.mosaic-grid .img-4{grid-area:d; aspect-ratio:1/1}
-.mosaic-grid .img-5{grid-area:e; aspect-ratio:1/1}
+/* カード下部アクション */
+.card-actions{display:flex; gap:8px; padding:12px 14px; border-top:1px solid #0b1a33}
 
-@media (max-width:840px){
-  .mosaic-grid{
-    grid-template-columns:1fr;
-    grid-template-areas:"a" "b" "c" "d" "e";
-  }
-  .mosaic-grid .img-2,.mosaic-grid .img-3{height:auto}
+/* ライトボックス */
+.lightbox{
+  position:fixed; inset:0; z-index:1000; background:rgba(7,12,20,.86);
+  display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px);
 }
-
-/* lightbox */
-.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center}
-.lightbox-inner{position:relative;max-width:min(95vw,1400px);max-height:90vh}
-.lightbox img{max-width:100%;max-height:90vh;display:block}
-.lightbox .close{position:absolute;top:-12px;right:-12px;width:40px;height:40px;border-radius:50%;border:none;background:#10213a;color:#fff;font-size:20px;cursor:pointer}
-
-/* input */
-.form label{display:block;margin:6px 0 6px}
-.form input,.form select,.form textarea{width:100%;background:#0c1830;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px}
-.grid{display:grid;gap:12px}
-.grid-2{grid-template-columns:1fr 1fr}
-.col-2{grid-column:1 / -1}
-.form-actions{display:flex;gap:10px;margin-top:10px}
-
-.images{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
-@media (max-width:760px){ .images{grid-template-columns:1fr}}
-.img-slot{position:relative;background:#0c1830;border:1px dashed #2a4471;border-radius:12px;min-height:180px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.img-slot span{position:absolute;top:8px;left:10px;color:var(--muted);font-size:12px}
-.img-slot img{max-width:100%;max-height:52vh;display:block}
-.img-del{position:absolute;top:6px;right:6px;border:none;border-radius:10px;background:#3b4d6d;color:#fff;padding:2px 8px;cursor:pointer}
-
-/* tags */
-.tag-pills{display:flex;gap:8px;flex-wrap:wrap}
-.tag-pills .pill{border:1px solid var(--border);border-radius:999px;padding:6px 10px;background:#0c1830;color:#d5e6ff;cursor:pointer}
-.tag-pills .pill.active{background:#17315a;border-color:#2c58a0}
-
-/* home */
-.home{display:grid;gap:16px}
-.hero{text-align:center}
-.logo{height:64px;opacity:.9}
-.home-actions{display:flex;gap:12px;justify-content:center}
+.lightbox img{
+  max-width: min(92vw,1200px);
+  max-height: 84vh;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.55);
+}
+.lightbox-close{
+  position:absolute; top:18px; right:22px;
+  width:40px;height:40px;border-radius:999px;
+  border:1px solid #1d2b40;background:#0a1220;color:#e5e7eb;cursor:pointer;font-size:20px;
+}
+.lightbox-close:hover{background:#0f1d30}

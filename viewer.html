@@ -1,61 +1,64 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>定点一覧</title>
-<link rel="stylesheet" href="css/style.css?v=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VALO LINEUPS - ビュー</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="page page-viewer">
-<header class="topbar">
-  <div class="title">VALO LINEUPS</div>
-  <nav class="nav">
-    <a class="btn" href="index.html">ホーム</a>
-    <a class="btn btn-primary" href="input.html">定点を追加</a>
-  </nav>
-</header>
+<body>
+  <header class="topbar">
+    <div class="brand">VALO LINEUPS</div>
+    <nav class="nav">
+      <a class="btn" href="index.html">ホーム</a>
+      <a class="btn btn-primary" href="input.html">定点を追加</a>
+    </nav>
+  </header>
 
-<main class="container">
-  <section class="panel">
-    <h2>フィルタ</h2>
-    <div class="filters" id="filters">
-      <select id="f-map"><option value="">Map</option></select>
-      <select id="f-agent"><option value="">Agent</option></select>
-      <select id="f-side">
-        <option value="">Side</option>
-        <option>Attack</option><option>Defense</option>
-      </select>
-      <select id="f-site"><option value="">Site</option><option>A</option><option>B</option><option>C</option><option>Both</option></select>
-      <select id="f-throw">
-        <option value="">投げ方</option>
-        <option>普通打ち</option><option>走り投げ</option><option>ジャンプ投げ</option>
-        <option>走りジャンプ</option><option>ワンウェイ</option>
-      </select>
-      <input id="f-q" type="search" placeholder="キーワード(タグ/説明含)">
-      <button id="f-clear" class="btn">クリア</button>
-    </div>
-  </section>
+  <main class="container">
+    <!-- フィルタ -->
+    <section id="filters" class="panel">
+      <h2 class="panel-title">フィルタ</h2>
+      <div class="filter-row">
+        <select id="f-map"    class="select"><option value="">Map</option></select>
+        <select id="f-agent"  class="select"><option value="">Agent</option></select>
+        <select id="f-side"   class="select">
+          <option value="">Side</option>
+          <option>Attack</option>
+          <option>Defense</option>
+        </select>
+        <select id="f-site"   class="select">
+          <option value="">Site</option>
+          <option>A</option><option>B</option><option>C</option>
+        </select>
+        <select id="f-throw"  class="select">
+          <option value="">投げ方</option>
+          <option>普通投げ</option><option>走り投げ</option><option>ジャンプ投げ</option>
+        </select>
+        <input  id="f-q" type="search" class="input" placeholder="キーワード(タグ/説明含)" />
+        <button id="f-clear" class="btn">クリア</button>
+      </div>
+      <div class="filter-actions">
+        <button id="export" class="btn">エクスポート</button>
+        <label class="btn">
+          インポート
+          <input id="import" type="file" accept="application/json" hidden>
+        </label>
+        <button id="wipe" class="btn btn-danger">全削除</button>
+      </div>
+    </section>
 
-  <section id="list" class="list"></section>
+    <!-- 一覧 -->
+    <section id="list" class="list"></section>
+  </main>
 
-  <div class="foot-actions">
-    <button id="export" class="btn">エクスポート</button>
-    <label class="btn">
-      インポート<input id="import" type="file" accept="application/json" hidden>
-    </label>
-    <button id="wipe" class="btn btn-danger">全削除</button>
-  </div>
-</main>
-
-<!-- 拡大表示 -->
-<div id="lightbox" class="lightbox" hidden>
-  <div class="lightbox-inner">
+  <!-- ライトボックス（初期は必ず非表示） -->
+  <div id="lightbox" class="lightbox" hidden>
     <img id="lightbox-img" alt="">
-    <button id="lightbox-close" class="close">×</button>
+    <button id="lightbox-close" class="lightbox-close" aria-label="閉じる">×</button>
   </div>
-</div>
 
-<script src="js/common.js?v=1"></script>
-<script src="js/viewer.js?v=1"></script>
+  <script src="js/common.js"></script>
+  <script src="js/viewer.js"></script>
 </body>
 </html>
