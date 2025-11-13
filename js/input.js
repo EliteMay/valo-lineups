@@ -186,3 +186,33 @@ document.addEventListener("DOMContentLoaded", () => {
     catch(e){ alert("インポート失敗: "+e.message); }
   });
 });
+// ==== 入場時パスワード認証（下に貼るだけOK） ==========================
+(function gateByPassword() {
+  // 1セッション中は再認証させない
+  if (sessionStorage.getItem('valolineups_authed') === '1') return;
+
+  const ask = async () => {
+    const pwd = prompt('入力ページはパスワードが必要です。');
+    if (!pwd) return false;
+    try {
+      const res = await fetch('/auth-check', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({ password: pwd })
+      });
+      const ok = res.ok;
+      if (ok) sessionStorage.setItem('valolineups_authed', '1');
+      return ok;
+    } catch (e) { return false; }
+  };
+
+  // DOM 生成前でも動くよう即時実行
+  (async () => {
+    const ok = await ask();
+    if (!ok) {
+      alert('パスワードが違います。');
+      location.href = 'index.html';
+    }
+  })();
+})();
+

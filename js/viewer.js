@@ -193,3 +193,123 @@ document.addEventListener("DOMContentLoaded", () => {
 
   apply();
 });
+// ==== 画像差し替え（編集モード） 下に貼るだけOK =========================
+// 前提: 各カード要素に data-id が付いている（既存の編集/削除で使っているID）
+// 画像サムネイルは .lineup-img というクラス（なければ画像要素に .lineup-img を追加してね）
+(function enableImageReplace() {
+  // 画像縮小ユーティリティ（common.js にあるならそれを使う）
+  async function fileToDataUrl(file, maxW = 1600) {
+    const bmp = await createImageBitmap(file);
+    const canvas = document.createElement('canvas');
+    const scale = Math.min(1, maxW / bmp.width);
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    return dataUrl;
+  }
+
+  // 画像置換 core
+  async function replaceImageForCard(cardEl, imgIndex/*0-based*/, newDataUrl) {
+    const id = cardEl?.dataset?.id;
+    if (!id) return;
+    const db = JSON.parse(localStorage.getItem('valolineups_list') || '[]');
+    const idx = db.findIndex(x => String(x.id) === String(id));
+    if (idx === -1) return;
+    const entry = db[idx];
+    entry.images = entry.images || [];
+    entry.images[imgIndex] = newDataUrl;
+    localStorage.setItem('valolineups_list', JSON.stringify(db));
+    // 画面側も即時差し替え
+    const imgs = cardEl.querySelectorAll('.lineup-img');
+    if (imgs[imgIndex]) imgs[imgIndex].src = newDataUrl;
+  }
+
+  // 「編集」ボタンが押されたらフラグON
+  let editing = false;
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('button') && /編集/.test(e.target.textContent)) {
+      editing = true;
+      document.body.dataset.editing = '1';
+      return;
+    }
+    if (e.target.closest('button') && /保存|完了|キャンセル/.test(e.target.textContent)) {
+      editing = false;
+      delete document.body.dataset.editing;
+    }
+  });
+
+  // 画像クリックでファイル選択→置換（編集時のみ）
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  document.body.appendChild(fileInput);
+
+  let pending = { card: null, index: -1 };
+  document.addEventListener('click', async (e) => {
+    const imgEl = e.target.closest('.lineup-img');
+    if (!imgEl || !editing) return;
+    const card = e.target.closest('[data-id]');
+    const imgs = Array.from(card.querySelectorAll('.lineup-img'));
+    const imgIndex = imgs.indexOf(imgEl);
+    if (imgIndex < 0) return;
+
+    pending = { card, index: imgIndex };
+    fileInput.value = '';
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', async () => {
+    const f = fileInput.files?.[0];
+    if (!f || !pending.card) return;
+    const dataUrl = await fileToDataUrl(f, 1600);
+    await replaceImageForCard(pending.card, pending.index, dataUrl);
+    pending = { card: null, index: -1 };
+  });
+
+  // 画像貼り付け（Ctrl+V）にも対応（編集時のみ）
+  window.addEventListener('paste', async (e) => {
+    if (!editing) return;
+    const item = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
+    if (!item || !pending.card || pending.index < 0) return;
+    const file = item.getAsFile();
+    const dataUrl = await fileToDataUrl(file, 1600);
+    await replaceImageForCard(pending.card, pending.index, dataUrl);
+    pending = { card: null, index: -1 };
+  });
+})();
+// ==== 画像表示順を [1,5,3,2,4] に並び替え（下に貼るだけOK） ============
+(function forceImageOrder() {
+  const ORDER = [0, 4, 2, 1, 3]; // 0-based: 1,5,3,2,4
+
+  // カードが描画されるたびに並べ替える（MutationObserverで監視）
+  const root = document.body;
+  const isCard = (el) => el.matches?.('.lineup-card,[data-lineup-card]');
+  const reorder = (card) => {
+    const box = card.querySelector?.('.images-grid,.lineup-images,.images');
+    if (!box) return;
+    const nodes = Array.from(box.querySelectorAll('.lineup-img,img'));
+    if (nodes.length <= 1) return;
+    const wanted = ORDER.map(i => nodes[i]).filter(Boolean);
+    if (!wanted.length) return;
+    // 既存を一旦末尾に追加し直し
+    wanted.forEach(n => box.appendChild(n));
+  };
+
+  // 初期 & 以降の変化を監視
+  document.querySelectorAll('.lineup-card,[data-lineup-card]').forEach(reorder);
+  const mo = new MutationObserver((muts) => {
+    muts.forEach(m => {
+      m.addedNodes.forEach(n => {
+        if (n.nodeType === 1) {
+          if (isCard(n)) reorder(n);
+          n.querySelectorAll?.('.lineup-card,[data-lineup-card]').forEach(reorder);
+        }
+      });
+    });
+  });
+  mo.observe(root, { childList: true, subtree: true });
+})();
+
