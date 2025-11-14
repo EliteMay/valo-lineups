@@ -1,83 +1,113 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>定点を追加/編集</title>
-<link rel="stylesheet" href="css/style.css?v=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>定点を追加/編集</title>
+  <link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body class="page page-input">
-<header class="topbar">
-  <div class="title">VALO LINEUPS</div>
-  <nav class="nav">
-    <a class="btn" href="viewer.html">定点一覧</a>
-  </nav>
-</header>
+  <header class="topbar">
+    <div class="title">VALO LINEUPS</div>
+    <nav class="nav">
+      <a class="btn" href="viewer.html">定点一覧</a>
+    </nav>
+  </header>
 
-<main class="container">
-  <form id="form" class="form">
-    <div class="grid grid-2">
-      <div>
-        <label>マップ</label>
-        <select id="map" required></select>
+  <main class="container">
+    <form id="form" class="form">
+      <div class="grid grid-2">
+        <div>
+          <label>マップ</label>
+          <select id="map" required></select>
+        </div>
+        <div>
+          <label>エージェント</label>
+          <select id="agent" required></select>
+        </div>
+        <div>
+          <label>サイド</label>
+          <select id="side" required>
+            <option>Attack</option><option>Defense</option>
+          </select>
+        </div>
+        <div>
+          <label>サイト</label>
+          <select id="site">
+            <option value="">（空）</option><option>A</option><option>B</option><option>C</option><option>Both</option>
+          </select>
+        </div>
+        <div class="col-2">
+          <label>ポジ名（呼び方）</label>
+          <input id="pos" placeholder="例：Bメイン通常リコン" list="pos-suggest">
+          <datalist id="pos-suggest"></datalist>
+        </div>
+        <div class="col-2">
+          <label>投げ方（説明）</label>
+          <input id="throw" placeholder="例：走りジャンプ / 左クリック">
+        </div>
+        <div class="col-2">
+          <label>タグ（選択）</label>
+          <div id="tags" class="tag-pills"></div>
+        </div>
+        <div class="col-2">
+          <label>補足/注意点（任意）</label>
+          <textarea id="note" rows="3" placeholder="味方フラッシュと合わせる など"></textarea>
+        </div>
       </div>
-      <div>
-        <label>エージェント</label>
-        <select id="agent" required></select>
-      </div>
-      <div>
-        <label>サイド</label>
-        <select id="side" required>
-          <option>Attack</option><option>Defense</option>
-        </select>
-      </div>
-      <div>
-        <label>サイト</label>
-        <select id="site">
-          <option value="">（空）</option><option>A</option><option>B</option><option>C</option><option>Both</option>
-        </select>
-      </div>
-      <div class="col-2">
-        <label>ポジ名（呼び方）</label>
-        <input id="pos" placeholder="例：Bメイン通常リコン">
-      </div>
-      <div class="col-2">
-        <label>投げ方（説明）</label>
-        <input id="throw" placeholder="例：走りジャンプ / 左クリック">
-      </div>
-      <div class="col-2">
-        <label>タグ（選択）</label>
-        <div id="tags" class="tag-pills"></div>
-      </div>
-      <div class="col-2">
-        <label>補足/注意点（任意）</label>
-        <textarea id="note" rows="3" placeholder="味方フラッシュと合わせる など"></textarea>
-      </div>
-    </div>
 
-    <h3>画像（クリック → Ctrl+V で貼り付け / 個別削除可）</h3>
-    <p class="muted">推奨：<b>画像1=ミニマップ全体</b>、画像2=画面全体、画像3=合わせ位置、画像4=立ち位置、画像5=非成立/相手視点 など</p>
+      <h3>画像（クリック → Ctrl+V で貼り付け / 個別削除可）</h3>
+      <p class="muted">
+        推奨：<b>画像1=ミニマップ</b>、2=画面全体、3=合わせ位置、4=立ち位置、5=結果/相手視点 など
+      </p>
 
-    <div class="images">
-      <!-- 順番は保存時に 1,5,3,2,4 並べ替えで表示される -->
-      <div class="img-slot" data-key="img1"><span>画像1（ミニマップ全体）</span><button type="button" class="img-del">×</button><img></div>
-      <div class="img-slot" data-key="img2"><span>画像2（画面全体）</span><button type="button" class="img-del">×</button><img></div>
-      <div class="img-slot" data-key="img3"><span>画像3（合わせ位置）</span><button type="button" class="img-del">×</button><img></div>
-      <div class="img-slot" data-key="img4"><span>画像4（立ち位置）</span><button type="button" class="img-del">×</button><img></div>
-      <div class="img-slot" data-key="img5"><span>画像5（非成立/相手視点）</span><button type="button" class="img-del">×</button><img></div>
-    </div>
+      <div class="images">
+        <div class="img-slot" data-key="img1">
+          <span>画像1（ミニマップ）</span>
+          <button type="button" class="img-del">×</button>
+          <div class="img-slot-num">1</div>
+          <img>
+        </div>
+        <div class="img-slot" data-key="img2">
+          <span>画像2（画面全体）</span>
+          <button type="button" class="img-del">×</button>
+          <div class="img-slot-num">2</div>
+          <img>
+        </div>
+        <div class="img-slot" data-key="img3">
+          <span>画像3（合わせ位置）</span>
+          <button type="button" class="img-del">×</button>
+          <div class="img-slot-num">3</div>
+          <img>
+        </div>
+        <div class="img-slot" data-key="img4">
+          <span>画像4（立ち位置）</span>
+          <button type="button" class="img-del">×</button>
+          <div class="img-slot-num">4</div>
+          <img>
+        </div>
+        <div class="img-slot" data-key="img5">
+          <span>画像5（結果/相手視点）</span>
+          <button type="button" class="img-del">×</button>
+          <div class="img-slot-num">5</div>
+          <img>
+        </div>
+      </div>
 
-    <div class="form-actions">
-      <button id="reset" type="button" class="btn">リセット</button>
-      <button id="save" type="submit" class="btn btn-primary">保存する</button>
-      <button id="remove" type="button" class="btn btn-danger" hidden>この定点を削除</button>
-    </div>
+      <div class="form-actions">
+        <button id="reset" type="button" class="btn">リセット</button>
+        <button id="save" type="submit" class="btn btn-primary">保存する</button>
+        <button id="remove" type="button" class="btn btn-danger" hidden>この定点を削除</button>
+      </div>
 
-    <p class="muted">Win+Shift+S → クリップボードに画像 → 対象枠をクリック → Ctrl+V で貼り付け。</p>
-  </form>
-</main>
+      <p class="muted small">
+        Win+Shift+S → クリップボードに画像 → 対象枠をクリック → Ctrl+V で貼り付け。<br>
+        入力中のテキストは自動で一時保存されます。
+      </p>
+    </form>
+  </main>
 
-<script src="js/common.js?v=1"></script>
-<script src="js/input.js?v=1"></script>
+  <script src="js/common.js?v=2"></script>
+  <script src="js/input.js?v=2"></script>
 </body>
 </html>

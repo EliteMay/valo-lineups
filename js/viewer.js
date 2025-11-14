@@ -1,176 +1,481 @@
-/* ===== viewer ===== */
-const ORDER = [0, 4, 2, 1, 3]; // 1,5,3,2,4 の表示順
+// ビュー画面
 
-const listEl  = byId('list');
-const mapSel  = byId('f-map');
-const agentSel= byId('f-agent');
+document.addEventListener("DOMContentLoaded", () => {
+  const listEl = document.getElementById("list");
+  const hitCountEl = document.getElementById("hit-count");
 
-/* 初期UI構築 */
-fillSelectOptions(mapSel, MAPS);
-fillSelectOptions(agentSel, AGENTS);
+  const mapSel = document.getElementById("f-map");
+  const agentSel = document.getElementById("f-agent");
+  const siteSel = document.getElementById("f-site");
+  const qInput = document.getElementById("f-q");
+  const clearBtn = document.getElementById("f-clear");
+  const sortSel = document.getElementById("f-sort");
+  const sideTabsRoot = document.getElementById("side-tabs");
+  const quickTagsRoot = document.getElementById("quick-tags");
 
-/* クリア */
-byId('f-clear').onclick = () => {
-  qsa('#filters select,#filters input').forEach(el => el.value = '');
-  render();
-};
+  const exportBtn = document.getElementById("export");
+  const importInput = document.getElementById("import");
+  const wipeBtn = document.getElementById("wipe");
 
-/* 変更で再描画 */
-['f-map','f-agent','f-side','f-site','f-throw','f-q'].forEach(id=>{
-  byId(id).addEventListener('input', render);
-});
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  const lightboxClose = document.getElementById("lightbox-close");
 
-/* Export / Import / Wipe */
-byId('export').onclick = () => {
-  const blob = new Blob([ localStorage.getItem(STORAGE_KEY) || '[]' ], { type:'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'valo-lineups.json';
-  a.click();
-};
-byId('import').onchange = async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const text = await file.text();
-  try{
-    const arr = JSON.parse(text);
-    if(!Array.isArray(arr)) throw 0;
-    writeAll(arr);
-    alert('インポート完了');
-    render();
-  }catch{
-    alert('JSONが不正です');
-  }
-};
-byId('wipe').onclick = ()=>{
-  if(!promptPass()) return;
-  if(confirm('全ての定点を削除しますか？')){
-    writeAll([]);
-    render();
-  }
-};
+  let allLineups = loadLineups();
+  let state = {
+    map: "",
+    agent: "",
+    site: "",
+    side: "",
+    q: "",
+    tag: "",
+    sort: "created-desc",
+  };
 
-/* ===== ライトボックスの初期状態を必ず閉じておく ===== */
-const lb = byId('lightbox');
-if (lb) lb.hidden = true;                      // 初期で非表示
-document.addEventListener('keydown', (e)=>{   // ESC で閉じる
-  if (e.key === 'Escape' && lb) lb.hidden = true;
-});
-lb?.addEventListener('click', (e)=>{          // 背景クリックで閉じる
-  if (e.target === lb) lb.hidden = true;
-});
-byId('lightbox-close').onclick = () => { lb.hidden = true; };
+  let lightboxImages = [];
+  let lightboxIndex = 0;
 
-/* ===== 画面描画 ===== */
-function filterList(all){
-  const m   = mapSel.value.trim().toLowerCase();
-  const a   = agentSel.value.trim().toLowerCase();
-  const s   = byId('f-side').value.trim().toLowerCase();
-  const site= byId('f-site').value.trim().toLowerCase();
-  const th  = byId('f-throw').value.trim().toLowerCase();
-  const q   = byId('f-q').value.trim().toLowerCase();
+  initFilters();
+  renderQuickTags();
+  renderList();
+  setupEvents();
+  setupKeyboard();
 
-  return all.filter(it=>{
-    const text = [
-      it.map,it.agent,it.side,it.site,it.pos,it.throw,(it.tags||[]).join(' '),it.note
-    ].join(' ').toLowerCase();
+ function initFilters() {
+  const { maps, agents } = getAllMapsAgentsTags();
+  const mapList = [...new Set([...DEFAULT_MAPS, ...maps])]
+    .sort((a, b) => a.localeCompare(b, "ja"));
+  const agentList = [...new Set([...DEFAULT_AGENTS, ...agents])]
+    .sort((a, b) => a.localeCompare(b, "ja"));
 
-    if (m    && (it.map||'').toLowerCase()  !== m) return false;
-    if (a    && (it.agent||'').toLowerCase()!== a) return false;
-    if (s    && (it.side||'').toLowerCase() !== s) return false;
-    if (site && (it.site||'').toLowerCase() !== site) return false;
-    if (th   && (it.throw||'').toLowerCase().indexOf(th)===-1) return false;
-    if (q    && text.indexOf(q)===-1) return false;
-    return true;
+  mapList.forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = m;
+    mapSel.appendChild(opt);
+  });
+
+  agentList.forEach((a) => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = a;
+    agentSel.appendChild(opt);
   });
 }
 
-function render(){
-  const all = readAll();
-  const arr = filterList(all);
 
-  listEl.innerHTML = '';
-  if(!arr.length){
-    listEl.innerHTML = `<div class="panel"><p class="muted">登録済みの定点がありません。</p></div>`;
-    return;
-  }
-
-  arr.forEach(it=>{
-    const card = document.createElement('article');
-    card.className = 'card';
-
-    const head = document.createElement('div');
-    head.className = 'card-head';
-    head.innerHTML = `
-      <div class="chips">
-        ${it.map?`<span class="chip">${it.map}</span>`:''}
-        ${it.agent?`<span class="chip">${it.agent}</span>`:''}
-        ${it.side?`<span class="chip">${it.side}</span>`:''}
-        ${it.site?`<span class="chip">${it.site}</span>`:''}
-        ${(it.tags||[]).map(t=>`<span class="chip">#${t}</span>`).join('')}
-      </div>
-      <h3 class="title">${(it.pos||'（無題）')}</h3>
-      <div class="sub">${it.throw||''}</div>
-    `;
-    card.appendChild(head);
-
-    // 画像表示順: 1,5,3,2,4
-    const imgsRaw = [it.img1, it.img2, it.img3, it.img4, it.img5];
-    const imgs = ORDER.map(i => imgsRaw[i]).filter(Boolean);
-
-    if(imgs.length){
-      const grid = document.createElement('div');
-      grid.className = 'mosaic-grid';
-      imgs.forEach((src, idx)=>{
-        const cell = document.createElement('div');
-        cell.className = `cell img-${idx+1}`;
-        const img = document.createElement('img');
-        img.src = src; img.alt='';
-        img.addEventListener('click', ()=>openLightbox(src));
-        cell.appendChild(img);
-        grid.appendChild(cell);
+  function renderQuickTags() {
+    const freq = new Map();
+    allLineups.forEach((l) => {
+      (l.tags || []).forEach((t) => {
+        if (!t) return;
+        freq.set(t, (freq.get(t) || 0) + 1);
       });
-      card.appendChild(grid);
+    });
+    const tags = Array.from(freq.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([t]) => t);
+
+    quickTagsRoot.innerHTML = "";
+    tags.forEach((t) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tag";
+      btn.dataset.value = t;
+      btn.textContent = t;
+      btn.addEventListener("click", () => {
+        if (state.tag === t) {
+          state.tag = "";
+          btn.classList.remove("is-active");
+        } else {
+          state.tag = t;
+          quickTagsRoot
+            .querySelectorAll(".tag.is-active")
+            .forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+        }
+        renderList();
+      });
+      quickTagsRoot.appendChild(btn);
+    });
+  }
+
+  function filteredAndSorted() {
+    const q = state.q.toLowerCase();
+    let list = allLineups.slice();
+
+    list = list.filter((l) => {
+      if (state.map && l.map !== state.map) return false;
+      if (state.agent && l.agent !== state.agent) return false;
+      if (state.site && l.site !== state.site) return false;
+      if (state.side && l.side !== state.side) return false;
+
+      if (state.tag) {
+        if (!Array.isArray(l.tags) || !l.tags.includes(state.tag)) return false;
+      }
+
+      if (q) {
+        const hay = [
+          l.map,
+          l.agent,
+          l.site,
+          l.side,
+          l.pos,
+          l.throw,
+          l.note,
+          ...(l.tags || []),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+
+      return true;
+    });
+
+    const sort = state.sort;
+    list.sort((a, b) => {
+      if (sort === "created-asc") {
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      }
+      if (sort === "created-desc") {
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      }
+      if (sort === "map-site-agent") {
+        const ka =
+          (a.map || "") +
+          "|" +
+          (a.site || "") +
+          "|" +
+          (a.agent || "") +
+          "|" +
+          (a.pos || "");
+        const kb =
+          (b.map || "") +
+          "|" +
+          (b.site || "") +
+          "|" +
+          (b.agent || "") +
+          "|" +
+          (b.pos || "");
+        return ka.localeCompare(kb);
+      }
+      return 0;
+    });
+
+    return list;
+  }
+
+  function renderList() {
+    allLineups = loadLineups(); // 念のため最新
+    const list = filteredAndSorted();
+
+    if (!list.length) {
+      listEl.innerHTML =
+        '<div class="empty">条件に合う定点がありません。フィルタを緩めるか、新しく追加してください。</div>';
+      hitCountEl.textContent = "0件";
+      return;
     }
 
-    if(it.note){
-      const p = document.createElement('div');
-      p.className = 'card-head';
-      p.innerHTML = `<div class="muted">${it.note}</div>`;
-      card.appendChild(p);
-    }
+    hitCountEl.textContent = `${list.length}件 / 全${loadLineups().length}件`;
 
-    // アクション
-    const actions = document.createElement('div');
-    actions.className = 'card-actions';
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn';
-    editBtn.textContent = '編集';
-    editBtn.onclick = () => {
-      if(!promptPass()) return;
-      location.href = `input.html?id=${encodeURIComponent(it.id)}`;
-    };
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn btn-danger';
-    delBtn.textContent = '削除';
-    delBtn.onclick = () => {
-      if(!promptPass()) return;
-      if(!confirm('この定点を削除しますか？')) return;
-      const rest = readAll().filter(x => x.id !== it.id);
-      writeAll(rest);
-      render();
-    };
-    actions.append(editBtn, delBtn);
-    card.appendChild(actions);
+    listEl.innerHTML = "";
+    list.forEach((l) => {
+      const card = document.createElement("article");
+      card.className = "lineup";
+      if (l.side === "Attack") card.classList.add("lineup--attack");
+      if (l.side === "Defense") card.classList.add("lineup--defense");
+      card.dataset.id = l.id;
 
-    listEl.appendChild(card);
-  });
-}
+      const head = document.createElement("div");
+      head.className = "lineup__head";
 
-/* Lightbox open */
-function openLightbox(src){
-  byId('lightbox-img').src = src;
-  lb.hidden = false;
-}
+      const headMain = document.createElement("div");
+      headMain.className = "lineup__head-main";
 
-render();
+      const title = document.createElement("div");
+      title.className = "lineup__head-title";
+      title.textContent = l.pos || "(無題の定点)";
+
+      const meta = document.createElement("div");
+      meta.className = "lineup__head-meta";
+      meta.textContent = [
+        [l.map, l.site].filter(Boolean).join(" "),
+        [l.agent, l.side].filter(Boolean).join(" / "),
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      headMain.appendChild(title);
+      headMain.appendChild(meta);
+
+      const headActions = document.createElement("div");
+      headActions.className = "lineup__head-actions";
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "btn btn-ghost";
+      copyBtn.textContent = "コピー";
+      copyBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const text = generateShareText(l);
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            copyBtn.textContent = "コピー済み";
+            setTimeout(() => (copyBtn.textContent = "コピー"), 1500);
+          });
+        } else {
+          prompt("コピーしてください", text);
+        }
+      });
+
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "btn btn-ghost";
+      editBtn.textContent = "編集";
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        location.href = "input.html?id=" + encodeURIComponent(l.id);
+      });
+
+      headActions.appendChild(copyBtn);
+      headActions.appendChild(editBtn);
+
+      head.appendChild(headMain);
+      head.appendChild(headActions);
+
+      // gallery
+      const gallery = document.createElement("div");
+      gallery.className = "lineup__gallery";
+
+      const imgs = l.images || l; // 古いデータ互換
+      const orderKeys = ["img1", "img2", "img3", "img4", "img5"];
+
+      orderKeys.forEach((key) => {
+        const src = imgs[key];
+        if (!src) return;
+        const shot = document.createElement("div");
+        shot.className = "lineup__shot";
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = "";
+        shot.appendChild(img);
+        gallery.appendChild(shot);
+      });
+
+      // badges
+      const badges = document.createElement("div");
+      badges.className = "badges";
+
+      if (l.throw) {
+        const b = document.createElement("span");
+        b.className = "badge";
+        b.textContent = `投げ方: ${l.throw}`;
+        badges.appendChild(b);
+      }
+
+      (l.tags || []).forEach((t) => {
+        const b = document.createElement("span");
+        b.className = "badge";
+        b.textContent = t;
+        badges.appendChild(b);
+      });
+
+      card.appendChild(head);
+      card.appendChild(gallery);
+      card.appendChild(badges);
+      listEl.appendChild(card);
+    });
+
+    // 画像クリック → ライトボックス
+    listEl.querySelectorAll(".lineup__shot").forEach((shot) => {
+      shot.addEventListener("click", () => {
+        const card = shot.closest(".lineup");
+        const id = card.dataset.id;
+        const lineup = allLineups.find((x) => x.id === id);
+        if (!lineup) return;
+        const imgsObj = lineup.images || lineup;
+        lightboxImages = ["img1", "img2", "img3", "img4", "img5"]
+          .map((k) => imgsObj[k])
+          .filter(Boolean);
+
+        const imgEl = shot.querySelector("img");
+        const currentSrc = imgEl.src;
+        lightboxIndex = Math.max(
+          lightboxImages.findIndex((s) => s === currentSrc),
+          0
+        );
+        openLightbox(lightboxImages[lightboxIndex]);
+      });
+    });
+  }
+
+  function generateShareText(l) {
+    return [
+      `Map: ${l.map || ""} ${l.site || ""}`,
+      `Agent: ${l.agent || ""} (${l.side || ""})`,
+      `Pos: ${l.pos || ""}`,
+      l.throw ? `Throw: ${l.throw}` : "",
+      l.tags && l.tags.length ? `Tags: ${l.tags.join(", ")}` : "",
+      l.note ? `Note: ${l.note}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  function setupEvents() {
+    mapSel.addEventListener("change", () => {
+      state.map = mapSel.value;
+      renderList();
+    });
+    agentSel.addEventListener("change", () => {
+      state.agent = agentSel.value;
+      renderList();
+    });
+    siteSel.addEventListener("change", () => {
+      state.site = siteSel.value;
+      renderList();
+    });
+    qInput.addEventListener("input", () => {
+      state.q = qInput.value;
+      renderList();
+    });
+    sortSel.addEventListener("change", () => {
+      state.sort = sortSel.value;
+      renderList();
+    });
+
+    sideTabsRoot.addEventListener("click", (e) => {
+      const btn = e.target.closest(".side-tab");
+      if (!btn) return;
+      sideTabsRoot
+        .querySelectorAll(".side-tab")
+        .forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      state.side = btn.dataset.side || "";
+      renderList();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      state = {
+        map: "",
+        agent: "",
+        site: "",
+        side: "",
+        q: "",
+        tag: "",
+        sort: "created-desc",
+      };
+      mapSel.value = "";
+      agentSel.value = "";
+      siteSel.value = "";
+      qInput.value = "";
+      sortSel.value = "created-desc";
+      sideTabsRoot
+        .querySelectorAll(".side-tab")
+        .forEach((b) => b.classList.remove("is-active"));
+      sideTabsRoot
+        .querySelector('.side-tab[data-side=""]')
+        .classList.add("is-active");
+      quickTagsRoot
+        .querySelectorAll(".tag.is-active")
+        .forEach((b) => b.classList.remove("is-active"));
+      renderList();
+    });
+
+    exportBtn.addEventListener("click", () => {
+      const data = JSON.stringify(loadLineups(), null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "valo-lineups-export.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    importInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        if (!Array.isArray(json)) throw new Error("invalid");
+        if (!confirm("既存のデータにマージしますか？\n（重複IDは上書きされます）"))
+          return;
+
+        const current = loadLineups();
+        const map = new Map(current.map((x) => [x.id, x]));
+        json.forEach((l) => {
+          if (!l.id) l.id = generateId();
+          map.set(l.id, l);
+        });
+        const merged = Array.from(map.values());
+        saveLineups(merged);
+        allLineups = merged;
+        renderQuickTags();
+        renderList();
+        alert("インポートしました");
+      } catch {
+        alert("JSONの読み込みに失敗しました");
+      } finally {
+        importInput.value = "";
+      }
+    });
+
+    wipeBtn.addEventListener("click", () => {
+      if (!confirm("本当に全削除しますか？")) return;
+      wipeLineups();
+      allLineups = [];
+      renderQuickTags();
+      renderList();
+    });
+
+    lightboxClose.addEventListener("click", closeLightbox);
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+  }
+
+  function openLightbox(src) {
+    lightboxImg.src = src;
+    lightbox.removeAttribute("hidden");
+  }
+
+  function closeLightbox() {
+    lightbox.setAttribute("hidden", "");
+  }
+
+  function showPrevImage() {
+    if (!lightboxImages.length) return;
+    lightboxIndex =
+      (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    openLightbox(lightboxImages[lightboxIndex]);
+  }
+
+  function showNextImage() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    openLightbox(lightboxImages[lightboxIndex]);
+  }
+
+  function setupKeyboard() {
+    document.addEventListener("keydown", (e) => {
+      if (!lightbox.hasAttribute("hidden")) {
+        if (e.key === "Escape") {
+          closeLightbox();
+        } else if (e.key === "ArrowLeft") {
+          showPrevImage();
+        } else if (e.key === "ArrowRight") {
+          showNextImage();
+        }
+        return;
+      }
+
+      if (e.key === "Escape") {
+        clearBtn.click();
+        return;
+      }
+    });
+  }
+});

@@ -1,112 +1,320 @@
-/* ===== input ===== */
-const form = byId('form');
-const idParam = new URL(location.href).searchParams.get('id'); // 編集なら id が入る
-const isEdit = !!idParam;
+// 定点追加/編集ページ
 
-// パスワード（画面を開いた時点で）
-(() => { if(!promptPass()) location.href='viewer.html'; })();
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("form");
 
-fillSelectOptions(byId('map'), MAPS);
-fillSelectOptions(byId('agent'), AGENTS);
+  const mapSel = document.getElementById("map");
+  const agentSel = document.getElementById("agent");
+  const sideSel = document.getElementById("side");
+  const siteSel = document.getElementById("site");
+  const posInput = document.getElementById("pos");
+  const throwInput = document.getElementById("throw");
+  const noteInput = document.getElementById("note");
+  const tagsRoot = document.getElementById("tags");
+  const posSuggest = document.getElementById("pos-suggest");
 
-// タグ（選択式）
-const TAGS = ['one-way','ジャンプ','走り投げ','走りジャンプ','解除阻止','ラッシュ止め','設置後','フェイク','ピストル'];
-const tagWrap = byId('tags');
-TAGS.forEach(t=>{
-  const b = document.createElement('button');
-  b.type='button';
-  b.className='pill';
-  b.textContent=t;
-  b.onclick=()=> b.classList.toggle('active');
-  tagWrap.appendChild(b);
-});
+  const resetBtn = document.getElementById("reset");
+  const saveBtn = document.getElementById("save");
+  const removeBtn = document.getElementById("remove");
 
-// 画像スロット：クリック→貼り付け、×で個別削除
-qsa('.img-slot').forEach(slot=>{
-  const img = slot.querySelector('img');
-  const del = slot.querySelector('.img-del');
+  const imgSlots = Array.from(document.querySelectorAll(".img-slot"));
 
-  slot.addEventListener('click', async ()=>{
-    try{
-      const dataUrl = await toDataUrlFromClipboard();
-      img.src = dataUrl;
-    }catch(err){
-      alert('クリップボードに画像がありません');
-    }
+  let editingId = null;
+  let lastClickedSlot = null;
+
+  initSelects();
+  initTags();
+  restoreLastSelection();
+  loadEditingDataIfAny();
+  restoreDraftIfAny();
+  setupImageSlots();
+  setupPasteListener();
+  setupDraftAutoSave();
+  setupEvents();
+
+  function initSelects() {
+  const { maps, agents } = getAllMapsAgentsTags();
+
+  const mapList = [...new Set([...DEFAULT_MAPS, ...maps])]
+    .sort((a, b) => a.localeCompare(b, "ja"));
+  const agentList = [...new Set([...DEFAULT_AGENTS, ...agents])]
+    .sort((a, b) => a.localeCompare(b, "ja"));
+
+  mapList.forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = m;
+    mapSel.appendChild(opt);
   });
-  del.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    img.removeAttribute('src');
-  });
-});
 
-// 編集読み込み
-if(isEdit){
-  const item = readAll().find(x=>x.id===idParam);
-  if(!item){ alert('データが見つかりません'); location.href='viewer.html'; }
-  byId('map').value = item.map||'';
-  byId('agent').value = item.agent||'';
-  byId('side').value = item.side||'Attack';
-  byId('site').value = item.site||'';
-  byId('pos').value = item.pos||'';
-  byId('throw').value = item.throw||'';
-  byId('note').value = item.note||'';
-  (item.tags||[]).forEach(t=>{
-    const p = qsa('.tag-pills .pill').find(el=>el.textContent===t);
-    if(p) p.classList.add('active');
+  agentList.forEach((a) => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = a;
+    agentSel.appendChild(opt);
   });
-  if(item.img1) qs('[data-key="img1"] img').src = item.img1;
-  if(item.img2) qs('[data-key="img2"] img').src = item.img2;
-  if(item.img3) qs('[data-key="img3"] img').src = item.img3;
-  if(item.img4) qs('[data-key="img4"] img').src = item.img4;
-  if(item.img5) qs('[data-key="img5"] img').src = item.img5;
-
-  byId('remove').hidden = false;
-  byId('remove').onclick = ()=>{
-    if(!promptPass()) return;
-    if(!confirm('この定点を削除しますか？')) return;
-    const rest = readAll().filter(x=>x.id!==idParam);
-    writeAll(rest);
-    location.href='viewer.html';
-  };
 }
 
-// リセット
-byId('reset').onclick = ()=>{
-  if(confirm('入力内容をリセットしますか？')){
-    form.reset();
-    qsa('.img-slot img').forEach(i=>i.removeAttribute('src'));
-    qsa('.tag-pills .pill').forEach(p=>p.classList.remove('active'));
+
+  function initTags() {
+    const { tags } = getAllMapsAgentsTags();
+    const allTags = [...new Set([...DEFAULT_TAGS, ...tags])];
+
+    tagsRoot.innerHTML = "";
+    allTags.forEach((t) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tag";
+      btn.textContent = t;
+      btn.dataset.value = t;
+      btn.addEventListener("click", () => {
+        btn.classList.toggle("is-active");
+      });
+      tagsRoot.appendChild(btn);
+    });
   }
-};
 
-// 保存
-form.addEventListener('submit', (e)=>{
-  e.preventDefault();
-  const data = {
-    id: isEdit ? idParam : genId(),
-    map: byId('map').value.trim(),
-    agent: byId('agent').value.trim(),
-    side: byId('side').value.trim(),
-    site: byId('site').value.trim(),
-    pos: byId('pos').value.trim(),
-    throw: byId('throw').value.trim(),
-    tags: qsa('.tag-pills .pill.active').map(x=>x.textContent),
-    note: byId('note').value.trim(),
-    img1: qs('[data-key="img1"] img').getAttribute('src')||'',
-    img2: qs('[data-key="img2"] img').getAttribute('src')||'',
-    img3: qs('[data-key="img3"] img').getAttribute('src')||'',
-    img4: qs('[data-key="img4"] img').getAttribute('src')||'',
-    img5: qs('[data-key="img5"] img').getAttribute('src')||'',
-    createdAt: isEdit ? undefined : Date.now(),
-    updatedAt: Date.now()
-  };
+  function restoreLastSelection() {
+    const last = loadLastSelection();
+    if (!last) return;
+    if (last.map && [...mapSel.options].some(o => o.value === last.map)) {
+      mapSel.value = last.map;
+    }
+    if (last.agent && [...agentSel.options].some(o => o.value === last.agent)) {
+      agentSel.value = last.agent;
+    }
+    if (last.side) sideSel.value = last.side;
+    if (last.site) siteSel.value = last.site;
+  }
 
-  // 保存
-  const all = readAll();
-  const i = all.findIndex(x=>x.id===data.id);
-  if(i>=0) all[i]=data; else all.unshift(data);
-  writeAll(all);
-  alert('保存しました');
-  location.href='viewer.html';
+  function readQueryId() {
+    const params = new URLSearchParams(location.search);
+    return params.get("id");
+  }
+
+  function loadEditingDataIfAny() {
+    const id = readQueryId();
+    if (!id) return;
+    const lineup = getLineupById(id);
+    if (!lineup) return;
+
+    editingId = id;
+    mapSel.value = lineup.map || "";
+    agentSel.value = lineup.agent || "";
+    sideSel.value = lineup.side || "Attack";
+    siteSel.value = lineup.site || "";
+    posInput.value = lineup.pos || "";
+    throwInput.value = lineup.throw || "";
+    noteInput.value = lineup.note || "";
+
+    // tags
+    if (Array.isArray(lineup.tags)) {
+      lineup.tags.forEach((t) => {
+        const btn = tagsRoot.querySelector(`.tag[data-value="${t}"]`);
+        if (btn) btn.classList.add("is-active");
+      });
+    }
+
+    // images
+    const imgs = lineup.images || lineup; // 古いデータ互換
+    imgSlots.forEach((slot, i) => {
+      const key = slot.dataset.key;
+      const src = imgs[key];
+      if (src) {
+        const img = slot.querySelector("img");
+        img.src = src;
+        slot.classList.add("has-image");
+      }
+    });
+
+    removeBtn.hidden = false;
+    clearDraft(); // 編集モードではドラフトは無視
+  }
+
+  function restoreDraftIfAny() {
+    if (editingId) return; // 編集時はドラフト使わない
+    const draft = loadDraft();
+    if (!draft) return;
+
+    if (draft.map) mapSel.value = draft.map;
+    if (draft.agent) agentSel.value = draft.agent;
+    if (draft.side) sideSel.value = draft.side;
+    if (draft.site) siteSel.value = draft.site;
+    if (draft.pos) posInput.value = draft.pos;
+    if (draft.throw) throwInput.value = draft.throw;
+    if (draft.note) noteInput.value = draft.note;
+
+    if (Array.isArray(draft.tags)) {
+      draft.tags.forEach((t) => {
+        const btn = tagsRoot.querySelector(`.tag[data-value="${t}"]`);
+        if (btn) btn.classList.add("is-active");
+      });
+    }
+  }
+
+  function setupImageSlots() {
+    imgSlots.forEach((slot) => {
+      const img = slot.querySelector("img");
+      const delBtn = slot.querySelector(".img-del");
+
+      slot.addEventListener("click", (e) => {
+        if (e.target === delBtn) return;
+        lastClickedSlot = slot;
+      });
+
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        img.removeAttribute("src");
+        slot.classList.remove("has-image");
+      });
+    });
+  }
+
+  function setupPasteListener() {
+    document.addEventListener("paste", async (e) => {
+      if (!lastClickedSlot) return;
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      const item = Array.from(items).find((it) => it.type.startsWith("image/"));
+      if (!item) return;
+
+      const blob = item.getAsFile();
+      if (!blob) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = lastClickedSlot.querySelector("img");
+        img.src = reader.result;
+        lastClickedSlot.classList.add("has-image");
+      };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function setupDraftAutoSave() {
+    const save = () => {
+      if (editingId) return; // 編集中はドラフト不要
+      const activeTags = Array.from(
+        tagsRoot.querySelectorAll(".tag.is-active")
+      ).map((b) => b.dataset.value);
+
+      saveDraft({
+        map: mapSel.value,
+        agent: agentSel.value,
+        side: sideSel.value,
+        site: siteSel.value,
+        pos: posInput.value,
+        throw: throwInput.value,
+        note: noteInput.value,
+        tags: activeTags,
+      });
+    };
+
+    setInterval(save, 5000); // 5秒ごと
+  }
+
+  function currentSelectionKey() {
+    return [
+      mapSel.value,
+      siteSel.value,
+      agentSel.value,
+      sideSel.value,
+    ].join("|");
+  }
+
+  function updatePosSuggestion() {
+    const list = loadLineups();
+    const key = currentSelectionKey();
+    const set = new Set();
+    list.forEach((l) => {
+      const k = [l.map, l.site, l.agent, l.side].join("|");
+      if (k === key && l.pos) set.add(l.pos);
+    });
+    posSuggest.innerHTML = "";
+    Array.from(set).forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      posSuggest.appendChild(opt);
+    });
+  }
+
+  function setupEvents() {
+    [mapSel, siteSel, agentSel, sideSel].forEach((el) => {
+      el.addEventListener("change", () => {
+        updatePosSuggestion();
+      });
+    });
+    updatePosSuggestion();
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const tags = Array.from(
+        tagsRoot.querySelectorAll(".tag.is-active")
+      ).map((b) => b.dataset.value);
+
+      const imgs = {};
+      imgSlots.forEach((slot) => {
+        const key = slot.dataset.key;
+        const img = slot.querySelector("img");
+        if (img && img.src) {
+          imgs[key] = img.src;
+        }
+      });
+
+      const data = {
+        id: editingId || undefined,
+        map: mapSel.value,
+        agent: agentSel.value,
+        side: sideSel.value,
+        site: siteSel.value,
+        pos: posInput.value.trim(),
+        throw: throwInput.value.trim(),
+        tags,
+        note: noteInput.value.trim(),
+        images: imgs,
+      };
+
+      const id = upsertLineup(data);
+
+      saveLastSelection({
+        map: data.map,
+        agent: data.agent,
+        side: data.side,
+        site: data.site,
+      });
+
+      clearDraft();
+
+      alert("保存しました");
+      // 保存後、編集モードで開き直す
+      location.href = "input.html?id=" + encodeURIComponent(id);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      form.reset();
+      imgSlots.forEach((slot) => {
+        const img = slot.querySelector("img");
+        img.removeAttribute("src");
+        slot.classList.remove("has-image");
+      });
+      tagsRoot.querySelectorAll(".tag.is-active").forEach((b) => {
+        b.classList.remove("is-active");
+      });
+      clearDraft();
+    });
+
+    removeBtn.addEventListener("click", () => {
+      if (!editingId) return;
+      if (!confirm("この定点を削除しますか？")) return;
+      deleteLineup(editingId);
+      alert("削除しました");
+      location.href = "viewer.html";
+    });
+
+    // Ctrl+S で保存
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        saveBtn.click();
+      }
+    });
+  }
 });

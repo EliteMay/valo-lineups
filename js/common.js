@@ -1,50 +1,166 @@
-/* ===== 共通：保存/取得/ID/パスワード ===== */
-const STORAGE_KEY = 'valo_lineups';
-const ADMIN_PASS = 'may'; // ★必要なら変更
+// 共通：localStorage 管理とかユーティリティ
 
-function readAll(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const arr = JSON.parse(raw || '[]');
-    return Array.isArray(arr) ? arr : [];
-  }catch(e){ return []; }
-}
-function writeAll(list){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list || []));
-}
-function genId(){ return 'id_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
-function promptPass(){ return window.prompt('パスワードを入力') === ADMIN_PASS; }
+const VALO_STORAGE_KEY = "valo-lineups-v1";
 
-const MAPS = ["Ascent","Bind","Breeze","Fracture","Haven","Icebox","Lotus","Pearl","Split","Sunset"];
-const AGENTS = [
-  "Astra","Breach","Brimstone","Chamber","Clove","Cypher","Deadlock","Fade","Gekko","Harbor","Iso","Jett",
-  "KAY/O","Killjoy","Neon","Omen","Phoenix","Raze","Reyna","Sage","Skye","Sova","Viper","Vyse","Yoru"
+function loadLineups() {
+  try {
+    const raw = localStorage.getItem(VALO_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLineups(list) {
+  localStorage.setItem(VALO_STORAGE_KEY, JSON.stringify(list));
+}
+
+function generateId() {
+  return (
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2, 8)
+  );
+}
+
+function upsertLineup(data) {
+  const list = loadLineups();
+  const now = Date.now();
+  if (!data.id) {
+    data.id = generateId();
+    data.createdAt = now;
+  }
+  data.updatedAt = now;
+
+  const idx = list.findIndex((x) => x.id === data.id);
+  if (idx >= 0) list[idx] = data;
+  else list.push(data);
+
+  saveLineups(list);
+  return data.id;
+}
+
+function deleteLineup(id) {
+  const list = loadLineups().filter((x) => x.id !== id);
+  saveLineups(list);
+}
+
+function wipeLineups() {
+  saveLineups([]);
+}
+
+function getLineupById(id) {
+  return loadLineups().find((x) => x.id === id) || null;
+}
+
+function getAllMapsAgentsTags() {
+  const list = loadLineups();
+  const maps = new Set();
+  const agents = new Set();
+  const tags = new Set();
+  list.forEach((l) => {
+    if (l.map) maps.add(l.map);
+    if (l.agent) agents.add(l.agent);
+    if (Array.isArray(l.tags)) {
+      l.tags.forEach((t) => t && tags.add(t));
+    }
+  });
+  return {
+    maps: Array.from(maps),
+    agents: Array.from(agents),
+    tags: Array.from(tags),
+  };
+}
+
+// デフォルトのマップ/エージェント/タグ
+// js/common.js
+
+// スタンダード全マップ
+const DEFAULT_MAPS = [
+  "Abyss",
+  "Ascent",
+  "Bind",
+  "Breeze",
+  "Corrode",
+  "Fracture",
+  "Haven",
+  "Icebox",
+  "Lotus",
+  "Pearl",
+  "Split",
+  "Sunset",
 ];
 
-function fillSelectOptions(sel, list){
-  sel.innerHTML += list.map(v => `<option>${v}</option>`).join('');
-}
-function qs(s, root=document){ return root.querySelector(s); }
-function qsa(s, root=document){ return Array.from(root.querySelectorAll(s)); }
-function byId(id){ return document.getElementById(id); }
 
-/* クリップボードの画像を DataURL で取得（クリック→Ctrl+V 用） */
-function toDataUrlFromClipboard(){
-  return new Promise((resolve, reject)=>{
-    navigator.clipboard.read().then(async items=>{
-      for (const item of items){
-        for (const type of item.types){
-          if (type.startsWith('image/')){
-            const blob = await item.getType(type);
-            const r = new FileReader();
-            r.onload = () => resolve(r.result);
-            r.onerror = reject;
-            r.readAsDataURL(blob);
-            return;
-          }
-        }
-      }
-      reject(new Error('画像クリップボードが見つかりません'));
-    }).catch(reject);
-  });
+const DEFAULT_AGENTS = [
+  "Brimstone",
+  "Viper",
+  "Omen",
+  "Astra",
+  "Harbor",
+  "Killjoy",
+  "Cypher",
+  "Sage",
+  "Sova",
+  "Fade",
+  "Skye",
+  "Breach",
+  "Raze",
+  "Jett",
+  "Phoenix",
+  "Reyna",
+  "Yoru",
+  "Neon",
+  "Gekko",
+  "Chamber",
+  "KAY/O",
+];
+
+const DEFAULT_TAGS = [
+  "post-plant",
+  "retake",
+  "default設置",
+  "ラッシュ",
+  "アンチラッシュ",
+  "1way",
+  "セットプレー",
+  "セーブ狩り",
+];
+
+// 前回の map/agent/side/site 保存用
+const LAST_SELECTION_KEY = "valo-lineups-last-selection";
+
+function saveLastSelection(sel) {
+  localStorage.setItem(LAST_SELECTION_KEY, JSON.stringify(sel));
+}
+
+function loadLastSelection() {
+  try {
+    const raw = localStorage.getItem(LAST_SELECTION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Input のドラフト用（画像は重いので除外）
+const DRAFT_KEY = "valo-lineups-draft";
+
+function saveDraft(obj) {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(obj));
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY);
 }
