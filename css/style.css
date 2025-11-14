@@ -246,7 +246,7 @@ button:active {
   border: 1px solid rgba(30,64,175,.7);
 }
 
-/* ---------- Forms / Inputs ---------- */
+/* ---------- Forms / Inputs (共通) ---------- */
 label {
   font-size: 12px;
   color: #9ca3af;
@@ -263,18 +263,26 @@ textarea {
   border-radius: 10px;
   border: 1px solid #1e293b;
   padding: 8px 10px;
-  color: var(--text);
+
+  /* ← ここを強めにする */
+  color: #f9fafb;           /* 文字をもっと明るく */
   font: inherit;
+  font-size: 13px;          /* 少しだけ大きく */
+  caret-color: #ff7a85;     /* カーソルも見やすく */
+
   outline: none;
+  text-shadow: 0 0 2px rgba(0,0,0,.6); /* 暗背景でも輪郭が出る */
   transition:
     border-color .16s ease-out,
     box-shadow .16s ease-out,
     background .16s ease-out;
 }
+
 input::placeholder,
 textarea::placeholder {
-  color: #64748b;
+  color: #64748b;           /* プレースホルダは今まで通り薄く */
 }
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -282,6 +290,7 @@ textarea:focus {
   box-shadow: 0 0 0 1px rgba(248,113,113,.65);
   background: #020617;
 }
+
 
 .select { height: 38px; }
 .input  { height: 38px; }
