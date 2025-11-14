@@ -642,11 +642,27 @@ textarea {
   transform: translateY(0);
 }
 
-.lineup__shot:nth-child(1) { grid-area: img1; }
-.lineup__shot:nth-child(2) { grid-area: img2; }
-.lineup__shot:nth-child(3) { grid-area: img3; }
-.lineup__shot:nth-child(4) { grid-area: img4; }
-.lineup__shot:nth-child(5) { grid-area: img5; }
+.lineup__shot--img1 { grid-area: img1; }
+.lineup__shot--img2 { grid-area: img2; }
+.lineup__shot--img3 { grid-area: img3; }
+.lineup__shot--img4 { grid-area: img4; }
+.lineup__shot--img5 { grid-area: img5; }
+
+/* 画像なしスロットの見た目（あれば） */
+.lineup__shot.is-empty::after {
+  content: "画像なし";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: #64748b;
+}
+.lineup__shot.is-empty:hover::after {
+  opacity: 1;
+  transform: none;
+}
+
 
 .badges {
   display: flex;

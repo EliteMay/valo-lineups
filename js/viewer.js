@@ -244,24 +244,30 @@ document.addEventListener("DOMContentLoaded", () => {
       head.appendChild(headMain);
       head.appendChild(headActions);
 
-      // gallery
       const gallery = document.createElement("div");
-      gallery.className = "lineup__gallery";
+gallery.className = "lineup__gallery";
 
-      const imgs = l.images || l; // 古いデータ互換
-      const orderKeys = ["img1", "img2", "img3", "img4", "img5"];
+const imgs = l.images || l; // 古いデータ互換
+const orderKeys = ["img1", "img2", "img3", "img4", "img5"];
 
-      orderKeys.forEach((key) => {
-        const src = imgs[key];
-        if (!src) return;
-        const shot = document.createElement("div");
-        shot.className = "lineup__shot";
-        const img = document.createElement("img");
-        img.src = src;
-        img.alt = "";
-        shot.appendChild(img);
-        gallery.appendChild(shot);
-      });
+orderKeys.forEach((key) => {
+  const shot = document.createElement("div");
+  shot.className = "lineup__shot lineup__shot--" + key;
+
+  const src = imgs[key];
+  if (src) {
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    shot.appendChild(img);
+  } else {
+    // 画像無しスロット（位置だけ確保）
+    shot.classList.add("is-empty");
+  }
+
+  gallery.appendChild(shot);
+});
+
 
       // badges
       const badges = document.createElement("div");
