@@ -782,3 +782,20 @@ textarea {
     aspect-ratio: 16 / 9;
   }
 }
+/* ===== 入力中文字が見えない問題 対策 ===== */
+.page-input input[type="text"],
+.page-input input[type="search"],
+.page-input textarea,
+.page-input select {
+  background-color: #020617 !important;
+  color: #ffffff !important;      /* 文字を真っ白に固定 */
+  caret-color: #ff7a85 !important;/* カーソルも赤っぽく */
+  text-shadow: none !important;
+}
+
+/* プレースホルダは少し薄めに */
+.page-input input::placeholder,
+.page-input textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
