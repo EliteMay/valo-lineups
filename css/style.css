@@ -798,4 +798,13 @@ textarea {
 .page-input textarea::placeholder {
   color: #94a3b8 !important;
 }
+/* ==== 日本語入力「変換中」だけ見えにくい対策 ==== */
+
+/* inputページでフォーカス中のフィールドは背景を少し明るくする */
+.page-input input:focus,
+.page-input textarea:focus,
+.page-input select:focus {
+  background-color: #0f172a !important; /* ちょっと明るい紺色 */
+  color: #ffffff !important;           /* 確定文字は白のまま */
+}
 
