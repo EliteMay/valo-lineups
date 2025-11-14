@@ -94,29 +94,47 @@ const DEFAULT_MAPS = [
 ];
 
 
+// js/common.js
+
+// 全エージェント一覧（2025時点）
 const DEFAULT_AGENTS = [
-  "Brimstone",
-  "Viper",
-  "Omen",
+  // Controllers
   "Astra",
+  "Brimstone",
+  "Clove",
   "Harbor",
-  "Killjoy",
-  "Cypher",
-  "Sage",
-  "Sova",
-  "Fade",
-  "Skye",
-  "Breach",
-  "Raze",
+  "Omen",
+  "Viper",
+
+  // Duelists
+  "Iso",
   "Jett",
-  "Phoenix",
-  "Reyna",
-  "Yoru",
   "Neon",
+  "Phoenix",
+  "Raze",
+  "Reyna",
+  "Waylay",
+  "Yoru",
+
+  // Initiators
+  "Breach",
+  "Fade",
   "Gekko",
-  "Chamber",
   "KAY/O",
+  "Skye",
+  "Sova",
+  "Tejo",
+
+  // Sentinels
+  "Chamber",
+  "Cypher",
+  "Deadlock",
+  "Killjoy",
+  "Sage",
+  "Veto",
+  "Vyse",
 ];
+
 
 const DEFAULT_TAGS = [
   "post-plant",
