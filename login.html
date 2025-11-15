@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>ログイン | VALO LINEUPS</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body class="page page-login">
+  <header class="topbar">
+    <div class="title">VALO LINEUPS</div>
+  </header>
+
+  <main class="container">
+    <section class="panel" style="max-width: 420px; margin-inline:auto;">
+      <h2 class="panel-title">LOGIN</h2>
+      <form id="login-form" class="form">
+        <label for="password">パスワード</label>
+        <input id="password" type="password" autocomplete="current-password" />
+
+        <p class="muted small" style="margin-top:8px;">
+          正しいパスワードは Cloudflare の環境変数 <code>ADMIN_PASS</code> に設定された値です。
+        </p>
+
+        <div class="form-actions" style="margin-top:14px;">
+          <button type="submit" class="btn btn-primary">ログイン</button>
+        </div>
+
+        <p id="login-error" class="small" style="color:#fecaca;margin-top:6px;"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/login.js?v=1"></script>
+</body>
+</html>

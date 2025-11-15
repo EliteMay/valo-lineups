@@ -1,4 +1,5 @@
-// 定点追加/編集ページ
+// js/input.js
+// ================= 定点追加/編集ページ =================
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("form");
@@ -32,27 +33,30 @@ document.addEventListener("DOMContentLoaded", () => {
   setupDraftAutoSave();
   setupEvents();
 
+  // ---------- セレクト初期化 ----------
+
   function initSelects() {
-  const { maps, agents } = getAllMapsAgentsTags();
+    const { maps, agents } = getAllMapsAgentsTags();
 
-  const mapList = [...new Set([...DEFAULT_MAPS, ...maps])]
-    .sort((a, b) => a.localeCompare(b, "ja"));
-  const agentList = [...new Set([...DEFAULT_AGENTS, ...agents])]
-    .sort((a, b) => a.localeCompare(b, "ja"));
+    const mapList = [...new Set([...DEFAULT_MAPS, ...maps])].sort((a, b) =>
+      a.localeCompare(b, "ja")
+    );
+    const agentList = [...new Set([...DEFAULT_AGENTS, ...agents])].sort(
+      (a, b) => a.localeCompare(b, "ja")
+    );
 
-  mapList.forEach((m) => {
-    const opt = document.createElement("option");
-    opt.value = opt.textContent = m;
-    mapSel.appendChild(opt);
-  });
+    mapList.forEach((m) => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = m;
+      mapSel.appendChild(opt);
+    });
 
-  agentList.forEach((a) => {
-    const opt = document.createElement("option");
-    opt.value = opt.textContent = a;
-    agentSel.appendChild(opt);
-  });
-}
-
+    agentList.forEach((a) => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = a;
+      agentSel.appendChild(opt);
+    });
+  }
 
   function initTags() {
     const { tags } = getAllMapsAgentsTags();
@@ -75,15 +79,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function restoreLastSelection() {
     const last = loadLastSelection();
     if (!last) return;
-    if (last.map && [...mapSel.options].some(o => o.value === last.map)) {
+
+    if (last.map && [...mapSel.options].some((o) => o.value === last.map)) {
       mapSel.value = last.map;
     }
-    if (last.agent && [...agentSel.options].some(o => o.value === last.agent)) {
+    if (last.agent && [...agentSel.options].some((o) => o.value === last.agent)) {
       agentSel.value = last.agent;
     }
     if (last.side) sideSel.value = last.side;
     if (last.site) siteSel.value = last.site;
   }
+
+  // ---------- 編集モード ----------
 
   function readQueryId() {
     const params = new URLSearchParams(location.search);
@@ -115,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // images
     const imgs = lineup.images || lineup; // 古いデータ互換
-    imgSlots.forEach((slot, i) => {
+    imgSlots.forEach((slot) => {
       const key = slot.dataset.key;
       const src = imgs[key];
       if (src) {
@@ -126,11 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     removeBtn.hidden = false;
-    clearDraft(); // 編集モードではドラフトは無視
+    clearDraft(); // 編集モードではdraft無視
   }
 
+  // ---------- draft 復元 ----------
+
   function restoreDraftIfAny() {
-    if (editingId) return; // 編集時はドラフト使わない
+    if (editingId) return;
     const draft = loadDraft();
     if (!draft) return;
 
@@ -150,6 +159,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ---------- 画像スロット ----------
+
   function setupImageSlots() {
     imgSlots.forEach((slot) => {
       const img = slot.querySelector("img");
@@ -168,71 +179,69 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 画像をリサイズして dataURL(JPEG) を返す関数
-async function resizeImageBlob(blob, maxWidth, maxHeight) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(blob);
+  // 画像をリサイズして dataURL(JPEG) を返す
+  async function resizeImageBlob(blob, maxWidth, maxHeight) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
 
-    img.onload = () => {
-      URL.revokeObjectURL(url);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
 
-      const scale = Math.min(
-        maxWidth / img.width,
-        maxHeight / img.height,
-        1 // もともと小さい画像はそのまま
-      );
+        const scale = Math.min(
+          maxWidth / img.width,
+          maxHeight / img.height,
+          1
+        );
 
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
 
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // JPEG で 0.8 品質にする（PNGよりだいぶ軽くなる）
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-      resolve(dataUrl);
-    };
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        resolve(dataUrl);
+      };
 
-    img.onerror = (err) => {
-      URL.revokeObjectURL(url);
-      reject(err);
-    };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(url);
+        reject(err);
+      };
 
-    img.src = url;
-  });
-}
+      img.src = url;
+    });
+  }
 
-function setupPasteListener() {
-  document.addEventListener("paste", async (e) => {
-    if (!lastClickedSlot) return;
-    const items = e.clipboardData && e.clipboardData.items;
-    if (!items) return;
-    const item = Array.from(items).find((it) => it.type.startsWith("image/"));
-    if (!item) return;
+  function setupPasteListener() {
+    document.addEventListener("paste", async (e) => {
+      if (!lastClickedSlot) return;
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      const item = Array.from(items).find((it) => it.type.startsWith("image/"));
+      if (!item) return;
 
-    const blob = item.getAsFile();
-    if (!blob) return;
+      const blob = item.getAsFile();
+      if (!blob) return;
 
-    try {
-      // ここでリサイズしてから dataURL 化
-      const dataUrl = await resizeImageBlob(blob, 1280, 720);
+      try {
+        const dataUrl = await resizeImageBlob(blob, 1280, 720);
+        const img = lastClickedSlot.querySelector("img");
+        img.src = dataUrl;
+        lastClickedSlot.classList.add("has-image");
+      } catch (err) {
+        console.error("画像リサイズに失敗", err);
+        alert("画像の読み込みに失敗しました");
+      }
+    });
+  }
 
-      const img = lastClickedSlot.querySelector("img");
-      img.src = dataUrl;
-      lastClickedSlot.classList.add("has-image");
-    } catch (err) {
-      console.error("画像リサイズに失敗", err);
-      alert("画像の読み込みに失敗しました");
-    }
-  });
-}
-
+  // ---------- draft 自動保存 ----------
 
   function setupDraftAutoSave() {
     const save = () => {
-      if (editingId) return; // 編集中はドラフト不要
+      if (editingId) return;
       const activeTags = Array.from(
         tagsRoot.querySelectorAll(".tag.is-active")
       ).map((b) => b.dataset.value);
@@ -249,8 +258,10 @@ function setupPasteListener() {
       });
     };
 
-    setInterval(save, 5000); // 5秒ごと
+    setInterval(save, 5000);
   }
+
+  // ---------- ポジ候補 ----------
 
   function currentSelectionKey() {
     return [
@@ -277,6 +288,8 @@ function setupPasteListener() {
     });
   }
 
+  // ---------- イベント ----------
+
   function setupEvents() {
     [mapSel, siteSel, agentSel, sideSel].forEach((el) => {
       el.addEventListener("change", () => {
@@ -287,6 +300,12 @@ function setupPasteListener() {
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
+
+      // ★ 書き込みアクションなので認証チェック
+      if (!ensureAuthForAction("login.html")) {
+        return;
+      }
+
       const tags = Array.from(
         tagsRoot.querySelectorAll(".tag.is-active")
       ).map((b) => b.dataset.value);
@@ -325,7 +344,6 @@ function setupPasteListener() {
       clearDraft();
 
       alert("保存しました");
-      // 保存後、編集モードで開き直す
       location.href = "input.html?id=" + encodeURIComponent(id);
     });
 
@@ -344,6 +362,12 @@ function setupPasteListener() {
 
     removeBtn.addEventListener("click", () => {
       if (!editingId) return;
+
+      // ★ 書き込みアクションなので認証チェック
+      if (!ensureAuthForAction("login.html")) {
+        return;
+      }
+
       if (!confirm("この定点を削除しますか？")) return;
       deleteLineup(editingId);
       alert("削除しました");

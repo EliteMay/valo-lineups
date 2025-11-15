@@ -1,6 +1,11 @@
-// 共通：localStorage 管理とかユーティリティ
+// js/common.js
+// ================= 共通：localStorage / マスターデータ / 認証 =================
 
 const VALO_STORAGE_KEY = "valo-lineups-v1";
+const LAST_SELECTION_KEY = "valo-lineups-last-selection";
+const DRAFT_KEY = "valo-lineups-draft";
+
+// ---------- localStorage 基本 ----------
 
 function loadLineups() {
   try {
@@ -28,6 +33,7 @@ function generateId() {
 function upsertLineup(data) {
   const list = loadLineups();
   const now = Date.now();
+
   if (!data.id) {
     data.id = generateId();
     data.createdAt = now;
@@ -55,27 +61,7 @@ function getLineupById(id) {
   return loadLineups().find((x) => x.id === id) || null;
 }
 
-function getAllMapsAgentsTags() {
-  const list = loadLineups();
-  const maps = new Set();
-  const agents = new Set();
-  const tags = new Set();
-  list.forEach((l) => {
-    if (l.map) maps.add(l.map);
-    if (l.agent) agents.add(l.agent);
-    if (Array.isArray(l.tags)) {
-      l.tags.forEach((t) => t && tags.add(t));
-    }
-  });
-  return {
-    maps: Array.from(maps),
-    agents: Array.from(agents),
-    tags: Array.from(tags),
-  };
-}
-
-// デフォルトのマップ/エージェント/タグ
-// js/common.js
+// ---------- マップ / エージェント / タグ ----------
 
 // スタンダード全マップ
 const DEFAULT_MAPS = [
@@ -92,9 +78,6 @@ const DEFAULT_MAPS = [
   "Split",
   "Sunset",
 ];
-
-
-// js/common.js
 
 // 全エージェント一覧（2025時点）
 const DEFAULT_AGENTS = [
@@ -135,7 +118,6 @@ const DEFAULT_AGENTS = [
   "Vyse",
 ];
 
-
 const DEFAULT_TAGS = [
   "post-plant",
   "retake",
@@ -147,8 +129,28 @@ const DEFAULT_TAGS = [
   "セーブ狩り",
 ];
 
-// 前回の map/agent/side/site 保存用
-const LAST_SELECTION_KEY = "valo-lineups-last-selection";
+function getAllMapsAgentsTags() {
+  const list = loadLineups();
+  const maps = new Set();
+  const agents = new Set();
+  const tags = new Set();
+
+  list.forEach((l) => {
+    if (l.map) maps.add(l.map);
+    if (l.agent) agents.add(l.agent);
+    if (Array.isArray(l.tags)) {
+      l.tags.forEach((t) => t && tags.add(t));
+    }
+  });
+
+  return {
+    maps: Array.from(maps),
+    agents: Array.from(agents),
+    tags: Array.from(tags),
+  };
+}
+
+// ---------- 前回選択 / draft ----------
 
 function saveLastSelection(sel) {
   localStorage.setItem(LAST_SELECTION_KEY, JSON.stringify(sel));
@@ -164,8 +166,6 @@ function loadLastSelection() {
 }
 
 // Input のドラフト用（画像は重いので除外）
-const DRAFT_KEY = "valo-lineups-draft";
-
 function saveDraft(obj) {
   localStorage.setItem(DRAFT_KEY, JSON.stringify(obj));
 }
@@ -181,4 +181,19 @@ function loadDraft() {
 
 function clearDraft() {
   localStorage.removeItem(DRAFT_KEY);
+}
+
+// ---------- 認証（書き込みアクション専用） ----------
+
+function ensureAuthForAction(loginPath = "login.html") {
+  const ok = localStorage.getItem("valoAuthOK") === "1";
+  if (ok) return true;
+
+  const go = window.confirm(
+    "この操作（保存/編集/削除）にはログインが必要です。\nログイン画面に移動しますか？"
+  );
+  if (go) {
+    location.href = loginPath;
+  }
+  return false;
 }

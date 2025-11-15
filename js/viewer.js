@@ -1,4 +1,5 @@
-// ビュー画面
+// js/viewer.js
+// ================= ビュー画面 =================
 
 document.addEventListener("DOMContentLoaded", () => {
   const listEl = document.getElementById("list");
@@ -41,26 +42,31 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEvents();
   setupKeyboard();
 
- function initFilters() {
-  const { maps, agents } = getAllMapsAgentsTags();
-  const mapList = [...new Set([...DEFAULT_MAPS, ...maps])]
-    .sort((a, b) => a.localeCompare(b, "ja"));
-  const agentList = [...new Set([...DEFAULT_AGENTS, ...agents])]
-    .sort((a, b) => a.localeCompare(b, "ja"));
+  // ---------- フィルタ初期化 ----------
 
-  mapList.forEach((m) => {
-    const opt = document.createElement("option");
-    opt.value = opt.textContent = m;
-    mapSel.appendChild(opt);
-  });
+  function initFilters() {
+    const { maps, agents } = getAllMapsAgentsTags();
+    const mapList = [...new Set([...DEFAULT_MAPS, ...maps])].sort((a, b) =>
+      a.localeCompare(b, "ja")
+    );
+    const agentList = [...new Set([...DEFAULT_AGENTS, ...agents])].sort(
+      (a, b) => a.localeCompare(b, "ja")
+    );
 
-  agentList.forEach((a) => {
-    const opt = document.createElement("option");
-    opt.value = opt.textContent = a;
-    agentSel.appendChild(opt);
-  });
-}
+    mapList.forEach((m) => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = m;
+      mapSel.appendChild(opt);
+    });
 
+    agentList.forEach((a) => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = a;
+      agentSel.appendChild(opt);
+    });
+  }
+
+  // ---------- クイックタグ ----------
 
   function renderQuickTags() {
     const freq = new Map();
@@ -70,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
         freq.set(t, (freq.get(t) || 0) + 1);
       });
     });
+
     const tags = Array.from(freq.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
@@ -98,6 +105,8 @@ document.addEventListener("DOMContentLoaded", () => {
       quickTagsRoot.appendChild(btn);
     });
   }
+
+  // ---------- フィルタ + ソート ----------
 
   function filteredAndSorted() {
     const q = state.q.toLowerCase();
@@ -166,6 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return list;
   }
 
+  // ---------- 一覧描画 ----------
+
   function renderList() {
     allLineups = loadLineups(); // 念のため最新
     const list = filteredAndSorted();
@@ -187,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (l.side === "Defense") card.classList.add("lineup--defense");
       card.dataset.id = l.id;
 
+      // ヘッダー
       const head = document.createElement("div");
       head.className = "lineup__head";
 
@@ -244,32 +256,31 @@ document.addEventListener("DOMContentLoaded", () => {
       head.appendChild(headMain);
       head.appendChild(headActions);
 
+      // 画像ギャラリー（固定5スロット）
       const gallery = document.createElement("div");
-gallery.className = "lineup__gallery";
+      gallery.className = "lineup__gallery";
 
-const imgs = l.images || l; // 古いデータ互換
-const orderKeys = ["img1", "img2", "img3", "img4", "img5"];
+      const imgs = l.images || l; // 古いデータ互換
+      const orderKeys = ["img1", "img2", "img3", "img4", "img5"];
 
-orderKeys.forEach((key) => {
-  const shot = document.createElement("div");
-  shot.className = "lineup__shot lineup__shot--" + key;
+      orderKeys.forEach((key) => {
+        const shot = document.createElement("div");
+        shot.className = "lineup__shot lineup__shot--" + key;
 
-  const src = imgs[key];
-  if (src) {
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = "";
-    shot.appendChild(img);
-  } else {
-    // 画像無しスロット（位置だけ確保）
-    shot.classList.add("is-empty");
-  }
+        const src = imgs[key];
+        if (src) {
+          const img = document.createElement("img");
+          img.src = src;
+          img.alt = "";
+          shot.appendChild(img);
+        } else {
+          shot.classList.add("is-empty");
+        }
 
-  gallery.appendChild(shot);
-});
+        gallery.appendChild(shot);
+      });
 
-
-      // badges
+      // バッジ
       const badges = document.createElement("div");
       badges.className = "badges";
 
@@ -306,11 +317,9 @@ orderKeys.forEach((key) => {
           .filter(Boolean);
 
         const imgEl = shot.querySelector("img");
-        const currentSrc = imgEl.src;
-        lightboxIndex = Math.max(
-          lightboxImages.findIndex((s) => s === currentSrc),
-          0
-        );
+        const currentSrc = imgEl?.src;
+        const idx = lightboxImages.findIndex((s) => s === currentSrc);
+        lightboxIndex = Math.max(idx, 0);
         openLightbox(lightboxImages[lightboxIndex]);
       });
     });
@@ -328,6 +337,8 @@ orderKeys.forEach((key) => {
       .filter(Boolean)
       .join("\n");
   }
+
+  // ---------- イベント ----------
 
   function setupEvents() {
     mapSel.addEventListener("change", () => {
@@ -403,6 +414,13 @@ orderKeys.forEach((key) => {
     importInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
+      // ★ 書き込みアクションなので認証チェック
+      if (!ensureAuthForAction("login.html")) {
+        e.target.value = "";
+        return;
+      }
+
       try {
         const text = await file.text();
         const json = JSON.parse(text);
@@ -430,11 +448,17 @@ orderKeys.forEach((key) => {
     });
 
     wipeBtn.addEventListener("click", () => {
+      // ★ 書き込みアクションなので認証チェック
+      if (!ensureAuthForAction("login.html")) {
+        return;
+      }
+
       if (!confirm("本当に全削除しますか？")) return;
       wipeLineups();
       allLineups = [];
       renderQuickTags();
       renderList();
+      alert("全て削除しました");
     });
 
     lightboxClose.addEventListener("click", closeLightbox);
@@ -442,6 +466,8 @@ orderKeys.forEach((key) => {
       if (e.target === lightbox) closeLightbox();
     });
   }
+
+  // ---------- ライトボックス / キーボード ----------
 
   function openLightbox(src) {
     lightboxImg.src = src;
