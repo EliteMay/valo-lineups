@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const lightboxImg = document.getElementById("lightbox-img");
   const lightboxClose = document.getElementById("lightbox-close");
 
-  let allLineups = loadLineups();
+    let allLineups = [];
   let state = {
     map: "",
     agent: "",
@@ -36,11 +36,40 @@ document.addEventListener("DOMContentLoaded", () => {
   let lightboxImages = [];
   let lightboxIndex = 0;
 
-  initFilters();
-  renderQuickTags();
-  renderList();
-  setupEvents();
-  setupKeyboard();
+  // ★ ここを init() 経由にする
+  init();
+
+  async function init() {
+    allLineups = await loadSharedLineups();  // ← さっき追加した関数
+
+    initFilters();
+    renderQuickTags();
+    renderList();
+    setupEvents();
+    setupKeyboard();
+  }
+
+  // ---------- 共有JSON読み込み ----------
+
+  async function loadSharedLineups() {
+    try {
+      const res = await fetch("shared-lineups.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const json = await res.json();
+      if (Array.isArray(json)) {
+        return json;
+      }
+      throw new Error("JSON is not array");
+    } catch (err) {
+      console.warn(
+        "shared-lineups.json の読み込みに失敗したので localStorage を参照します。",
+        err
+      );
+      // 開発中や共有ファイル未配置のときは localStorage をフォールバックに使う
+      return loadLineups();
+    }
+  }
+
 
   // ---------- フィルタ初期化 ----------
 
@@ -178,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------- 一覧描画 ----------
 
   function renderList() {
-    allLineups = loadLineups(); // 念のため最新
+
     const list = filteredAndSorted();
 
     if (!list.length) {
@@ -188,7 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    hitCountEl.textContent = `${list.length}件 / 全${loadLineups().length}件`;
+    hitCountEl.textContent = `${list.length}件 / 全${allLineups.length}件`;
+
 
     listEl.innerHTML = "";
     list.forEach((l) => {
