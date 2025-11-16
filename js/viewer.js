@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const lightboxImg = document.getElementById("lightbox-img");
   const lightboxClose = document.getElementById("lightbox-close");
 
-    let allLineups = [];
+  let allLineups = [];
   let state = {
     map: "",
     agent: "",
@@ -36,11 +36,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let lightboxImages = [];
   let lightboxIndex = 0;
 
-  // ★ ここを init() 経由にする
+  // ★ init() から開始
   init();
 
   async function init() {
-    allLineups = await loadSharedLineups();  // ← さっき追加した関数
+    allLineups = await loadSharedLineups();  // 共有JSON or localStorage
 
     initFilters();
     renderQuickTags();
@@ -69,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return loadLineups();
     }
   }
-
 
   // ---------- フィルタ初期化 ----------
 
@@ -218,7 +217,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     hitCountEl.textContent = `${list.length}件 / 全${allLineups.length}件`;
-
 
     listEl.innerHTML = "";
     list.forEach((l) => {
